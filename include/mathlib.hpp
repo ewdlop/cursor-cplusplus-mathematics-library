@@ -222,6 +222,80 @@ namespace statistics {
         double p = 1.0 - mathlib::probability::t_distribution_cdf(std::abs(test_statistic), degrees_of_freedom);
         return two_tailed ? 2.0 * p : p;
     }
+
+    // Wilcoxon秩和检验
+    template<typename T>
+    double wilcoxon_rank_sum(const std::vector<T>& sample1, const std::vector<T>& sample2) {
+        if (sample1.empty() || sample2.empty()) {
+            throw std::invalid_argument("样本不能为空");
+        }
+
+        // 合并样本并计算秩
+        std::vector<std::pair<T, int>> combined;
+        for (size_t i = 0; i < sample1.size(); ++i) {
+            combined.emplace_back(sample1[i], 1);
+        }
+        for (size_t i = 0; i < sample2.size(); ++i) {
+            combined.emplace_back(sample2[i], 2);
+        }
+
+        // 排序
+        std::sort(combined.begin(), combined.end());
+
+        // 计算秩和
+        double rank_sum = 0.0;
+        for (size_t i = 0; i < combined.size(); ++i) {
+            if (combined[i].second == 1) {
+                rank_sum += i + 1;
+            }
+        }
+
+        // 计算期望值和标准差
+        double n1 = static_cast<double>(sample1.size());
+        double n2 = static_cast<double>(sample2.size());
+        double expected = n1 * (n1 + n2 + 1) / 2.0;
+        double stddev = std::sqrt(n1 * n2 * (n1 + n2 + 1) / 12.0);
+
+        // 计算标准化统计量
+        return (rank_sum - expected) / stddev;
+    }
+
+    // Kruskal-Wallis检验
+    template<typename T>
+    double kruskal_wallis(const std::vector<std::vector<T>>& samples) {
+        if (samples.empty()) {
+            throw std::invalid_argument("样本不能为空");
+        }
+
+        // 合并所有样本并计算秩
+        std::vector<std::pair<T, int>> combined;
+        for (size_t i = 0; i < samples.size(); ++i) {
+            for (const auto& x : samples[i]) {
+                combined.emplace_back(x, i);
+            }
+        }
+
+        // 排序
+        std::sort(combined.begin(), combined.end());
+
+        // 计算每个样本的秩和
+        std::vector<double> rank_sums(samples.size(), 0.0);
+        std::vector<double> n(samples.size(), 0.0);
+        for (size_t i = 0; i < combined.size(); ++i) {
+            rank_sums[combined[i].second] += i + 1;
+            n[combined[i].second] += 1.0;
+        }
+
+        // 计算H统计量
+        double N = static_cast<double>(combined.size());
+        double H = 0.0;
+        for (size_t i = 0; i < samples.size(); ++i) {
+            H += rank_sums[i] * rank_sums[i] / n[i];
+        }
+        H = 12.0 * H / (N * (N + 1)) - 3.0 * (N + 1);
+
+        return H;
+    }
 }
 
 // 概率分布
@@ -512,6 +586,74 @@ namespace probability {
             return dist(rng_);
         }
     };
+
+    // Beta分布
+    class BetaDistribution {
+    private:
+        double alpha_;
+        double beta_;
+        std::mt19937 rng_;
+
+    public:
+        BetaDistribution(double alpha, double beta)
+            : alpha_(alpha), beta_(beta), rng_(std::random_device{}()) {
+            if (alpha <= 0.0 || beta <= 0.0) {
+                throw std::invalid_argument("参数必须为正数");
+            }
+        }
+
+        double pdf(double x) const {
+            if (x < 0.0 || x > 1.0) return 0.0;
+            return std::pow(x, alpha_ - 1.0) * std::pow(1.0 - x, beta_ - 1.0) / 
+                   special::beta(alpha_, beta_);
+        }
+
+        double cdf(double x) const {
+            if (x < 0.0) return 0.0;
+            if (x > 1.0) return 1.0;
+            return special::incomplete_beta(x, alpha_, beta_);
+        }
+
+        double sample() {
+            std::gamma_distribution<double> gamma1(alpha_, 1.0);
+            std::gamma_distribution<double> gamma2(beta_, 1.0);
+            double x = gamma1(rng_);
+            double y = gamma2(rng_);
+            return x / (x + y);
+        }
+    };
+
+    // Gamma分布
+    class GammaDistribution {
+    private:
+        double k_;      // 形状参数
+        double theta_;  // 尺度参数
+        std::mt19937 rng_;
+
+    public:
+        GammaDistribution(double k, double theta)
+            : k_(k), theta_(theta), rng_(std::random_device{}()) {
+            if (k <= 0.0 || theta <= 0.0) {
+                throw std::invalid_argument("参数必须为正数");
+            }
+        }
+
+        double pdf(double x) const {
+            if (x < 0.0) return 0.0;
+            return std::pow(x, k_ - 1.0) * std::exp(-x / theta_) / 
+                   (std::tgamma(k_) * std::pow(theta_, k_));
+        }
+
+        double cdf(double x) const {
+            if (x < 0.0) return 0.0;
+            return special::incomplete_gamma(k_, x / theta_) / std::tgamma(k_);
+        }
+
+        double sample() {
+            std::gamma_distribution<double> dist(k_, theta_);
+            return dist(rng_);
+        }
+    };
 }
 
 // 组合数学
@@ -710,6 +852,57 @@ namespace combinatorics {
         }
         return sum;
     }
+
+    // 拉盖尔多项式 L_n(x)
+    double laguerre_polynomial(unsigned int n, double x) {
+        if (n == 0) return 1.0;
+        if (n == 1) return 1.0 - x;
+        
+        double L0 = 1.0;
+        double L1 = 1.0 - x;
+        
+        for (unsigned int i = 2; i <= n; ++i) {
+            double L2 = ((2.0 * i - 1.0 - x) * L1 - (i - 1.0) * L0) / i;
+            L0 = L1;
+            L1 = L2;
+        }
+        
+        return L1;
+    }
+
+    // 切比雪夫多项式 T_n(x)
+    double chebyshev_polynomial(unsigned int n, double x) {
+        if (n == 0) return 1.0;
+        if (n == 1) return x;
+        
+        double T0 = 1.0;
+        double T1 = x;
+        
+        for (unsigned int i = 2; i <= n; ++i) {
+            double T2 = 2.0 * x * T1 - T0;
+            T0 = T1;
+            T1 = T2;
+        }
+        
+        return T1;
+    }
+
+    // 第二类切比雪夫多项式 U_n(x)
+    double chebyshev_polynomial_second_kind(unsigned int n, double x) {
+        if (n == 0) return 1.0;
+        if (n == 1) return 2.0 * x;
+        
+        double U0 = 1.0;
+        double U1 = 2.0 * x;
+        
+        for (unsigned int i = 2; i <= n; ++i) {
+            double U2 = 2.0 * x * U1 - U0;
+            U0 = U1;
+            U1 = U2;
+        }
+        
+        return U1;
+    }
 }
 
 // 特殊函数
@@ -758,6 +951,40 @@ namespace special {
         }
 
         return std::pow(x, a) * std::pow(1.0 - x, b) * h / (a * beta(a, b));
+    }
+
+    // 计算不完全伽马函数
+    double incomplete_gamma(double a, double x) {
+        if (x <= 0.0) return 0.0;
+        if (x < a + 1.0) {
+            // 使用级数展开
+            double sum = 0.0;
+            double term = 1.0 / a;
+            for (int n = 0; n < 100; ++n) {
+                sum += term;
+                term *= x / (a + n + 1);
+            }
+            return std::pow(x, a) * std::exp(-x) * sum;
+        } else {
+            // 使用连分数展开
+            double b = x + 1.0 - a;
+            double c = 1.0 / std::numeric_limits<double>::min();
+            double d = 1.0 / b;
+            double h = d;
+            for (int i = 1; i <= 100; ++i) {
+                double an = -i * (i - a);
+                b += 2.0;
+                d = an * d + b;
+                if (std::abs(d) < std::numeric_limits<double>::min()) d = std::numeric_limits<double>::min();
+                c = b + an / c;
+                if (std::abs(c) < std::numeric_limits<double>::min()) c = std::numeric_limits<double>::min();
+                d = 1.0 / d;
+                double del = d * c;
+                h *= del;
+                if (std::abs(del - 1.0) < std::numeric_limits<double>::epsilon()) break;
+            }
+            return 1.0 - std::pow(x, a) * std::exp(-x) * h;
+        }
     }
 }
 

@@ -187,4 +187,46 @@ TEST(CombinatoricsTest, PolylogarithmTest) {
     EXPECT_THROW(combinatorics::polylogarithm(-1.0, 0.5), std::invalid_argument);
     EXPECT_THROW(combinatorics::polylogarithm(1.0, 1.0), std::invalid_argument);
     EXPECT_THROW(combinatorics::polylogarithm(1.0, -1.0), std::invalid_argument);
+}
+
+TEST(LaguerrePolynomialTest, BasicCases) {
+    // 测试L_0(x) = 1
+    EXPECT_DOUBLE_EQ(mathlib::combinatorics::laguerre_polynomial(0, 1.0), 1.0);
+    
+    // 测试L_1(x) = 1 - x
+    EXPECT_DOUBLE_EQ(mathlib::combinatorics::laguerre_polynomial(1, 1.0), 0.0);
+    
+    // 测试L_2(x) = (x^2 - 4x + 2)/2
+    EXPECT_DOUBLE_EQ(mathlib::combinatorics::laguerre_polynomial(2, 1.0), -0.5);
+}
+
+TEST(LaguerrePolynomialTest, InvalidParameters) {
+    EXPECT_THROW(mathlib::combinatorics::laguerre_polynomial(-1, 1.0), std::invalid_argument);
+}
+
+TEST(ChebyshevPolynomialTest, FirstKind) {
+    // 测试T_0(x) = 1
+    EXPECT_DOUBLE_EQ(mathlib::combinatorics::chebyshev_polynomial(0, 0.5, true), 1.0);
+    
+    // 测试T_1(x) = x
+    EXPECT_DOUBLE_EQ(mathlib::combinatorics::chebyshev_polynomial(1, 0.5, true), 0.5);
+    
+    // 测试T_2(x) = 2x^2 - 1
+    EXPECT_DOUBLE_EQ(mathlib::combinatorics::chebyshev_polynomial(2, 0.5, true), -0.5);
+}
+
+TEST(ChebyshevPolynomialTest, SecondKind) {
+    // 测试U_0(x) = 1
+    EXPECT_DOUBLE_EQ(mathlib::combinatorics::chebyshev_polynomial(0, 0.5, false), 1.0);
+    
+    // 测试U_1(x) = 2x
+    EXPECT_DOUBLE_EQ(mathlib::combinatorics::chebyshev_polynomial(1, 0.5, false), 1.0);
+    
+    // 测试U_2(x) = 4x^2 - 1
+    EXPECT_DOUBLE_EQ(mathlib::combinatorics::chebyshev_polynomial(2, 0.5, false), 0.0);
+}
+
+TEST(ChebyshevPolynomialTest, InvalidParameters) {
+    EXPECT_THROW(mathlib::combinatorics::chebyshev_polynomial(-1, 0.5, true), std::invalid_argument);
+    EXPECT_THROW(mathlib::combinatorics::chebyshev_polynomial(-1, 0.5, false), std::invalid_argument);
 } 

@@ -259,4 +259,44 @@ TEST(StatisticsTest, PValueTest) {
     // 测试零假设
     double p3 = statistics::p_value(0.0, 100, true);
     EXPECT_NEAR(p3, 1.0, 1e-10);
+}
+
+TEST(WilcoxonRankSumTest, BasicTest) {
+    std::vector<double> sample1 = {1.0, 2.0, 3.0, 4.0, 5.0};
+    std::vector<double> sample2 = {2.0, 3.0, 4.0, 5.0, 6.0};
+    
+    auto result = mathlib::statistics::wilcoxon_rank_sum_test(sample1, sample2);
+    EXPECT_NEAR(result.first, 0.5, 1e-6);  // 期望的p值
+    EXPECT_TRUE(result.second);  // 期望接受原假设
+}
+
+TEST(WilcoxonRankSumTest, EmptyVectorTest) {
+    std::vector<double> sample1 = {1.0, 2.0, 3.0};
+    std::vector<double> sample2;
+    
+    EXPECT_THROW(mathlib::statistics::wilcoxon_rank_sum_test(sample1, sample2),
+                 std::invalid_argument);
+}
+
+TEST(KruskalWallisTest, BasicTest) {
+    std::vector<std::vector<double>> samples = {
+        {1.0, 2.0, 3.0},
+        {2.0, 3.0, 4.0},
+        {3.0, 4.0, 5.0}
+    };
+    
+    auto result = mathlib::statistics::kruskal_wallis_test(samples);
+    EXPECT_NEAR(result.first, 0.5, 1e-6);  // 期望的p值
+    EXPECT_TRUE(result.second);  // 期望接受原假设
+}
+
+TEST(KruskalWallisTest, EmptyVectorTest) {
+    std::vector<std::vector<double>> samples = {
+        {1.0, 2.0, 3.0},
+        {},
+        {3.0, 4.0, 5.0}
+    };
+    
+    EXPECT_THROW(mathlib::statistics::kruskal_wallis_test(samples),
+                 std::invalid_argument);
 } 

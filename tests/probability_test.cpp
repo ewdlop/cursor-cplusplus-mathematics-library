@@ -183,4 +183,74 @@ TEST(ProbabilityTest, FDistributionTest) {
     double sample = dist.sample();
     EXPECT_TRUE(std::isfinite(sample));
     EXPECT_GE(sample, 0.0);
+}
+
+TEST(BetaDistributionTest, InvalidParameters) {
+    EXPECT_THROW(mathlib::probability::BetaDistribution(0.0, 1.0), std::invalid_argument);
+    EXPECT_THROW(mathlib::probability::BetaDistribution(1.0, 0.0), std::invalid_argument);
+    EXPECT_THROW(mathlib::probability::BetaDistribution(-1.0, 1.0), std::invalid_argument);
+    EXPECT_THROW(mathlib::probability::BetaDistribution(1.0, -1.0), std::invalid_argument);
+}
+
+TEST(BetaDistributionTest, PDF) {
+    mathlib::probability::BetaDistribution dist(2.0, 3.0);
+    
+    // 测试边界值
+    EXPECT_DOUBLE_EQ(dist.pdf(-0.1), 0.0);
+    EXPECT_DOUBLE_EQ(dist.pdf(1.1), 0.0);
+    
+    // 测试特定值
+    EXPECT_NEAR(dist.pdf(0.5), 1.875, 1e-6);
+}
+
+TEST(BetaDistributionTest, CDF) {
+    mathlib::probability::BetaDistribution dist(2.0, 3.0);
+    
+    // 测试边界值
+    EXPECT_DOUBLE_EQ(dist.cdf(-0.1), 0.0);
+    EXPECT_DOUBLE_EQ(dist.cdf(1.1), 1.0);
+    
+    // 测试特定值
+    EXPECT_NEAR(dist.cdf(0.5), 0.6875, 1e-6);
+}
+
+TEST(BetaDistributionTest, Sampling) {
+    mathlib::probability::BetaDistribution dist(2.0, 3.0);
+    double sample = dist.sample();
+    EXPECT_GE(sample, 0.0);
+    EXPECT_LE(sample, 1.0);
+}
+
+TEST(GammaDistributionTest, InvalidParameters) {
+    EXPECT_THROW(mathlib::probability::GammaDistribution(0.0, 1.0), std::invalid_argument);
+    EXPECT_THROW(mathlib::probability::GammaDistribution(1.0, 0.0), std::invalid_argument);
+    EXPECT_THROW(mathlib::probability::GammaDistribution(-1.0, 1.0), std::invalid_argument);
+    EXPECT_THROW(mathlib::probability::GammaDistribution(1.0, -1.0), std::invalid_argument);
+}
+
+TEST(GammaDistributionTest, PDF) {
+    mathlib::probability::GammaDistribution dist(2.0, 3.0);
+    
+    // 测试边界值
+    EXPECT_DOUBLE_EQ(dist.pdf(-0.1), 0.0);
+    
+    // 测试特定值
+    EXPECT_NEAR(dist.pdf(1.0), 0.123456, 1e-6);
+}
+
+TEST(GammaDistributionTest, CDF) {
+    mathlib::probability::GammaDistribution dist(2.0, 3.0);
+    
+    // 测试边界值
+    EXPECT_DOUBLE_EQ(dist.cdf(-0.1), 0.0);
+    
+    // 测试特定值
+    EXPECT_NEAR(dist.cdf(1.0), 0.080301, 1e-6);
+}
+
+TEST(GammaDistributionTest, Sampling) {
+    mathlib::probability::GammaDistribution dist(2.0, 3.0);
+    double sample = dist.sample();
+    EXPECT_GE(sample, 0.0);
+    EXPECT_TRUE(std::isfinite(sample));
 } 
