@@ -2,9 +2,9 @@
 
 ## 简介 | Introduction
 
-本库为 C++ 提供了丰富的数学功能，包括统计、概率、组合数学和线性代数。现已将原有的 `mathlib.hpp` 拆分为多个子模块，便于按需引用和维护。
+本库为 C++ 提供了丰富的数学功能，包括统计、概率、组合数学、线性代数、数值分析、优化算法和信号处理。现已将原有的 `mathlib.hpp` 拆分为多个子模块，便于按需引用和维护。
 
-This library provides rich mathematical functionalities for C++, including statistics, probability, combinatorics, and linear algebra. The original `mathlib.hpp` has been split into several submodules for easier and more flexible usage.
+This library provides rich mathematical functionalities for C++, including statistics, probability, combinatorics, linear algebra, numerical analysis, optimization algorithms, and signal processing. The original `mathlib.hpp` has been split into several submodules for easier and more flexible usage.
 
 ---
 
@@ -17,6 +17,9 @@ include/
     probability.hpp     # 概率相关
     combinatorics.hpp   # 组合数学相关
     linear_algebra.hpp  # 线性代数相关
+    numerical.hpp      # 数值分析相关
+    optimization.hpp   # 优化算法相关
+    signal.hpp         # 信号处理相关
 ```
 
 ---
@@ -34,18 +37,33 @@ include/
 #include "mathlib/probability.hpp"
 #include "mathlib/combinatorics.hpp"
 #include "mathlib/linear_algebra.hpp"
+#include "mathlib/numerical.hpp"
+#include "mathlib/optimization.hpp"
+#include "mathlib/signal.hpp"
 
 #include <vector>
 #include <iostream>
 
 int main() {
+    // 统计示例
     std::vector<double> data = {1.0, 2.0, 3.0, 4.0, 5.0};
     std::cout << "Mean: " << mathlib::statistics::mean(data) << std::endl;
-    std::cout << "Variance: " << mathlib::statistics::variance(data) << std::endl;
-    std::cout << "Normal PDF(0): " << mathlib::probability::normal_pdf(0.0) << std::endl;
-    std::cout << "5! = " << mathlib::combinatorics::factorial<int>(5) << std::endl;
-    mathlib::linear_algebra::Matrix<double> A({{1,2},{3,4}});
-    std::cout << "A(0,0): " << A(0,0) << std::endl;
+    
+    // 数值分析示例
+    auto f = [](double x) { return x * x - 2; };
+    double root = mathlib::numerical::newton_method(f, 1.0);
+    std::cout << "Square root of 2: " << root << std::endl;
+    
+    // 优化示例
+    auto objective = [](const std::vector<double>& x) { 
+        return x[0] * x[0] + x[1] * x[1]; 
+    };
+    auto result = mathlib::optimization::gradient_descent(objective, {1.0, 1.0});
+    
+    // 信号处理示例
+    std::vector<double> signal = {1.0, 2.0, 3.0, 4.0, 5.0};
+    auto fft_result = mathlib::signal::fft(signal);
+    
     return 0;
 }
 ```
@@ -54,14 +72,54 @@ int main() {
 
 ## 主要功能 | Main Features
 
-- **统计 (Statistics):**
-  - 均值、方差、标准差、中位数、众数、偏度、峰度、相关性、协方差、分位数、假设检验、置信区间等
-- **概率 (Probability):**
-  - 常见分布（正态、二项、泊松）、概率密度/分布函数、熵、互信息、马尔可夫链、随机数生成等
-- **组合数学 (Combinatorics):**
-  - 阶乘、组合数、排列数、多项式、生成函数、斯特林数、贝尔数等
-- **线性代数 (Linear Algebra):**
-  - 矩阵与向量运算、行列式、迹、LU分解、特征值/特征向量、线性方程组、最小二乘、条件数等
+### 统计 (Statistics)
+- 基础统计：均值、方差、标准差、中位数、众数等
+- 高级统计：偏度、峰度、相关性、协方差、分位数等
+- 假设检验：t检验、F检验、卡方检验等
+- 非参数检验：Wilcoxon检验、Kruskal-Wallis检验等
+- 时间序列分析：自相关、移动平均、指数平滑等
+
+### 概率 (Probability)
+- 概率分布：正态、二项、泊松、指数、伽马等
+- 随机数生成：各种分布的随机数生成器
+- 概率论工具：熵、互信息、KL散度等
+- 马尔可夫链：转移矩阵、稳态分布等
+- 贝叶斯统计：贝叶斯推断、后验概率等
+
+### 组合数学 (Combinatorics)
+- 基础组合：阶乘、组合数、排列数等
+- 特殊函数：斯特林数、贝尔数、欧拉数等
+- 多项式：拉盖尔多项式、切比雪夫多项式等
+- 生成函数：组合生成函数、指数生成函数等
+- 图论：路径计数、树计数、匹配等
+
+### 线性代数 (Linear Algebra)
+- 矩阵运算：基本运算、转置、逆、行列式等
+- 向量运算：点积、叉积、范数等
+- 分解方法：LU、QR、SVD、Cholesky等
+- 特征值问题：特征值、特征向量计算
+- 线性系统：方程组求解、最小二乘等
+
+### 数值分析 (Numerical Analysis)
+- 数值积分：梯形法则、辛普森法则、高斯求积等
+- 数值微分：中心差分、前向差分等
+- 方程求解：牛顿法、二分法、割线法等
+- 插值方法：拉格朗日插值、牛顿插值、样条插值等
+- 常微分方程：欧拉法、龙格库塔法等
+
+### 优化算法 (Optimization)
+- 无约束优化：梯度下降、共轭梯度、拟牛顿法等
+- 约束优化：拉格朗日乘子法、内点法等
+- 全局优化：模拟退火、遗传算法等
+- 线性规划：单纯形法、内点法等
+- 非线性规划：序列二次规划等
+
+### 信号处理 (Signal Processing)
+- 傅里叶变换：FFT、DFT、小波变换等
+- 滤波器：FIR、IIR、卡尔曼滤波等
+- 频谱分析：功率谱、相位谱等
+- 信号重构：采样定理、插值等
+- 数字信号处理：卷积、相关等
 
 ---
 
