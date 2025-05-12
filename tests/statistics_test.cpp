@@ -1,9 +1,9 @@
 #include <gtest/gtest.h>
-#include "mathlib.hpp"
+#include "../include/mathlib.hpp"
 #include <vector>
 #include <cmath>
 
-using namespace mathlib::statistics;
+using namespace mathlib;
 
 TEST(StatisticsTest, MeanTest) {
     // 测试空向量
@@ -197,4 +197,66 @@ TEST(StatisticsTest, KurtosisTest) {
     // 测试尖峰分布
     std::vector<double> peaked = {-1.0, -1.0, 0.0, 1.0, 1.0};
     EXPECT_GT(kurtosis(peaked), 0.0);
+}
+
+TEST(StatisticsTest, TStatisticTest) {
+    std::vector<double> data = {1.0, 2.0, 3.0, 4.0, 5.0};
+    
+    // 测试空向量
+    EXPECT_THROW(statistics::t_statistic(std::vector<double>(), 0.0), std::invalid_argument);
+    
+    // 测试零标准差
+    std::vector<double> constant_data = {1.0, 1.0, 1.0};
+    EXPECT_THROW(statistics::t_statistic(constant_data, 1.0), std::runtime_error);
+    
+    // 测试正常情况
+    double t = statistics::t_statistic(data, 3.0);
+    EXPECT_NEAR(t, 0.0, 1e-10);
+}
+
+TEST(StatisticsTest, FStatisticTest) {
+    std::vector<double> sample1 = {1.0, 2.0, 3.0, 4.0, 5.0};
+    std::vector<double> sample2 = {2.0, 4.0, 6.0, 8.0, 10.0};
+    
+    // 测试空向量
+    EXPECT_THROW(statistics::f_statistic(std::vector<double>(), sample2), std::invalid_argument);
+    EXPECT_THROW(statistics::f_statistic(sample1, std::vector<double>()), std::invalid_argument);
+    
+    // 测试零方差
+    std::vector<double> constant_data = {1.0, 1.0, 1.0};
+    EXPECT_THROW(statistics::f_statistic(sample1, constant_data), std::runtime_error);
+    
+    // 测试正常情况
+    double f = statistics::f_statistic(sample1, sample2);
+    EXPECT_NEAR(f, 0.25, 1e-10);
+}
+
+TEST(StatisticsTest, ConfidenceIntervalTest) {
+    std::vector<double> data = {1.0, 2.0, 3.0, 4.0, 5.0};
+    
+    // 测试空向量
+    EXPECT_THROW(statistics::confidence_interval(std::vector<double>(), 0.95), std::invalid_argument);
+    
+    // 测试无效的置信水平
+    EXPECT_THROW(statistics::confidence_interval(data, -0.1), std::invalid_argument);
+    EXPECT_THROW(statistics::confidence_interval(data, 1.1), std::invalid_argument);
+    
+    // 测试正常情况
+    auto [lower, upper] = statistics::confidence_interval(data, 0.95);
+    EXPECT_GT(upper, lower);
+    EXPECT_NEAR((lower + upper) / 2.0, 3.0, 0.1);
+}
+
+TEST(StatisticsTest, PValueTest) {
+    // 测试双边检验
+    double p1 = statistics::p_value(1.96, 100, true);
+    EXPECT_NEAR(p1, 0.05, 0.01);
+    
+    // 测试单边检验
+    double p2 = statistics::p_value(1.96, 100, false);
+    EXPECT_NEAR(p2, 0.025, 0.01);
+    
+    // 测试零假设
+    double p3 = statistics::p_value(0.0, 100, true);
+    EXPECT_NEAR(p3, 1.0, 1e-10);
 } 

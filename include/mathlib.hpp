@@ -10,6 +10,7 @@
 #include <map>
 #include <unordered_map>
 #include <numbers>
+#include <tuple>
 
 namespace mathlib {
 
@@ -163,6 +164,63 @@ namespace statistics {
             sum += std::pow((x - m) / s, 4);
         }
         return sum / data.size() - 3.0; // 超额峰度
+    }
+
+    // 计算t检验统计量
+    template<typename T>
+    double t_statistic(const std::vector<T>& sample, double mu0) {
+        if (sample.empty()) {
+            throw std::invalid_argument("样本不能为空");
+        }
+        double m = mean(sample);
+        double s = standard_deviation(sample);
+        if (s == 0.0) {
+            throw std::runtime_error("样本标准差不能为零");
+        }
+        return (m - mu0) / (s / std::sqrt(sample.size()));
+    }
+
+    // 计算F检验统计量
+    template<typename T>
+    double f_statistic(const std::vector<T>& sample1, const std::vector<T>& sample2) {
+        if (sample1.empty() || sample2.empty()) {
+            throw std::invalid_argument("样本不能为空");
+        }
+        double var1 = variance(sample1);
+        double var2 = variance(sample2);
+        if (var2 == 0.0) {
+            throw std::runtime_error("第二个样本的方差不能为零");
+        }
+        return var1 / var2;
+    }
+
+    // 计算置信区间
+    template<typename T>
+    std::tuple<double, double> confidence_interval(const std::vector<T>& sample, double confidence_level) {
+        if (sample.empty()) {
+            throw std::invalid_argument("样本不能为空");
+        }
+        if (confidence_level <= 0.0 || confidence_level >= 1.0) {
+            throw std::invalid_argument("置信水平必须在0到1之间");
+        }
+
+        double m = mean(sample);
+        double s = standard_deviation(sample);
+        double n = static_cast<double>(sample.size());
+        
+        // 使用t分布的分位数
+        double alpha = (1.0 - confidence_level) / 2.0;
+        double t = std::abs(mathlib::probability::t_distribution_quantile(n - 1, alpha));
+        
+        double margin = t * s / std::sqrt(n);
+        return std::make_tuple(m - margin, m + margin);
+    }
+
+    // 计算p值
+    template<typename T>
+    double p_value(double test_statistic, int degrees_of_freedom, bool two_tailed = true) {
+        double p = 1.0 - mathlib::probability::t_distribution_cdf(std::abs(test_statistic), degrees_of_freedom);
+        return two_tailed ? 2.0 * p : p;
     }
 }
 
@@ -362,6 +420,98 @@ namespace probability {
             return dist(rng_);
         }
     };
+
+    // t分布
+    class TDistribution {
+    private:
+        int df_;
+        std::mt19937 rng_;
+
+    public:
+        TDistribution(int degrees_of_freedom)
+            : df_(degrees_of_freedom), rng_(std::random_device{}()) {
+            if (degrees_of_freedom <= 0) {
+                throw std::invalid_argument("自由度必须为正数");
+            }
+        }
+
+        double pdf(double x) const {
+            return std::tgamma((df_ + 1.0) / 2.0) / 
+                   (std::sqrt(df_ * M_PI) * std::tgamma(df_ / 2.0)) *
+                   std::pow(1.0 + x * x / df_, -(df_ + 1.0) / 2.0);
+        }
+
+        double cdf(double x) const {
+            if (x == 0.0) return 0.5;
+            double z = df_ / (df_ + x * x);
+            return 0.5 + 0.5 * std::copysign(1.0, x) * 
+                   (1.0 - special::incomplete_beta(z, df_/2.0, 0.5));
+        }
+
+        double sample() {
+            std::student_t_distribution<double> dist(df_);
+            return dist(rng_);
+        }
+
+        static double quantile(int df, double p) {
+            if (p < 0.0 || p > 1.0) {
+                throw std::invalid_argument("概率必须在0到1之间");
+            }
+            if (p == 0.5) return 0.0;
+            
+            // 使用近似方法计算分位数
+            double sign = (p < 0.5) ? -1.0 : 1.0;
+            p = (p < 0.5) ? p : 1.0 - p;
+            
+            double x = std::sqrt(-2.0 * std::log(2.0 * p));
+            double c0 = 2.515517;
+            double c1 = 0.802853;
+            double c2 = 0.010328;
+            double d1 = 1.432788;
+            double d2 = 0.189269;
+            double d3 = 0.001308;
+            
+            double t = x - (c0 + c1 * x + c2 * x * x) / 
+                      (1.0 + d1 * x + d2 * x * x + d3 * x * x * x);
+            
+            return sign * t * std::sqrt(df / (df - 2.0));
+        }
+    };
+
+    // F分布
+    class FDistribution {
+    private:
+        int df1_;
+        int df2_;
+        std::mt19937 rng_;
+
+    public:
+        FDistribution(int df1, int df2)
+            : df1_(df1), df2_(df2), rng_(std::random_device{}()) {
+            if (df1 <= 0 || df2 <= 0) {
+                throw std::invalid_argument("自由度必须为正数");
+            }
+        }
+
+        double pdf(double x) const {
+            if (x < 0.0) return 0.0;
+            return std::sqrt(std::pow(df1_ * x, df1_) * std::pow(df2_, df2_) / 
+                           std::pow(df1_ * x + df2_, df1_ + df2_)) /
+                   (x * special::beta(df1_/2.0, df2_/2.0));
+        }
+
+        double cdf(double x) const {
+            if (x < 0.0) return 0.0;
+            double z = df1_ * x / (df1_ * x + df2_);
+            return special::incomplete_beta(z, df1_/2.0, df2_/2.0) / 
+                   special::beta(df1_/2.0, df2_/2.0);
+        }
+
+        double sample() {
+            std::fisher_f_distribution<double> dist(df1_, df2_);
+            return dist(rng_);
+        }
+    };
 }
 
 // 组合数学
@@ -492,6 +642,122 @@ namespace combinatorics {
             sum += 1.0 / i;
         }
         return sum;
+    }
+
+    // 计算欧拉多项式 E_n(x)
+    double euler_polynomial(unsigned int n, double x) {
+        if (n == 0) return 1.0;
+        if (n == 1) return x - 0.5;
+        
+        std::vector<double> e(n + 1);
+        e[0] = 1.0;
+        e[1] = x - 0.5;
+        
+        for (unsigned int i = 2; i <= n; ++i) {
+            e[i] = (x - 0.5) * e[i-1] - 0.5 * i * e[i-2];
+        }
+        
+        return e[n];
+    }
+
+    // 计算伯努利多项式 B_n(x)
+    double bernoulli_polynomial(unsigned int n, double x) {
+        if (n == 0) return 1.0;
+        if (n == 1) return x - 0.5;
+        
+        std::vector<double> b(n + 1);
+        b[0] = 1.0;
+        b[1] = x - 0.5;
+        
+        for (unsigned int i = 2; i <= n; ++i) {
+            b[i] = x * b[i-1];
+            for (unsigned int j = 0; j < i; ++j) {
+                b[i] -= combination(i, j) * bernoulli(i-j) * b[j];
+            }
+            b[i] /= i;
+        }
+        
+        return b[n];
+    }
+
+    // 计算广义调和数 H(n,r)
+    double generalized_harmonic(unsigned int n, double r) {
+        if (r <= 0.0) {
+            throw std::invalid_argument("阶数必须为正数");
+        }
+        double sum = 0.0;
+        for (unsigned int i = 1; i <= n; ++i) {
+            sum += 1.0 / std::pow(i, r);
+        }
+        return sum;
+    }
+
+    // 计算多重对数函数 Li_s(z)
+    double polylogarithm(double s, double z) {
+        if (std::abs(z) >= 1.0) {
+            throw std::invalid_argument("|z|必须小于1");
+        }
+        if (s <= 0.0) {
+            throw std::invalid_argument("s必须为正数");
+        }
+        
+        double sum = 0.0;
+        double term = z;
+        for (int n = 1; n < 1000; ++n) {
+            sum += term / std::pow(n, s);
+            term *= z;
+            if (std::abs(term) < std::numeric_limits<double>::epsilon()) break;
+        }
+        return sum;
+    }
+}
+
+// 特殊函数
+namespace special {
+    // 计算beta函数 B(a,b)
+    double beta(double a, double b) {
+        return std::tgamma(a) * std::tgamma(b) / std::tgamma(a + b);
+    }
+
+    // 计算不完全beta函数 I_x(a,b)
+    double incomplete_beta(double x, double a, double b) {
+        if (x < 0.0 || x > 1.0) {
+            throw std::invalid_argument("x必须在0到1之间");
+        }
+        if (a <= 0.0 || b <= 0.0) {
+            throw std::invalid_argument("参数必须为正数");
+        }
+
+        // 使用连分数展开
+        const double eps = std::numeric_limits<double>::epsilon();
+        const int max_iter = 1000;
+
+        double c = 1.0;
+        double d = 1.0 - (a + b) * x / (a + 1.0);
+        if (std::abs(d) < eps) d = eps;
+        d = 1.0 / d;
+        double h = d;
+
+        for (int i = 1; i <= max_iter; ++i) {
+            double m = i / 2.0;
+            double an;
+            if (i % 2 == 0) {
+                an = m * (b - m) * x / ((a + 2.0 * m - 1.0) * (a + 2.0 * m));
+            } else {
+                an = -(a + m) * (a + b + m) * x / ((a + 2.0 * m) * (a + 2.0 * m + 1.0));
+            }
+
+            d = 1.0 + an * d;
+            if (std::abs(d) < eps) d = eps;
+            c = 1.0 + an / c;
+            if (std::abs(c) < eps) c = eps;
+            d = 1.0 / d;
+            double del = d * c;
+            h *= del;
+            if (std::abs(del - 1.0) < eps) break;
+        }
+
+        return std::pow(x, a) * std::pow(1.0 - x, b) * h / (a * beta(a, b));
     }
 }
 

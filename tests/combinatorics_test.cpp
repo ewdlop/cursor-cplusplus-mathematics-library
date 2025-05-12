@@ -1,7 +1,9 @@
 #include <gtest/gtest.h>
-#include "mathlib.hpp"
+#include "../include/mathlib.hpp"
+#include <vector>
+#include <cmath>
 
-using namespace mathlib::combinatorics;
+using namespace mathlib;
 
 TEST(CombinatoricsTest, FactorialTest) {
     // 测试基本阶乘
@@ -135,4 +137,54 @@ TEST(CombinatoricsTest, HarmonicTest) {
     EXPECT_DOUBLE_EQ(harmonic(3), 11.0/6.0);
     EXPECT_DOUBLE_EQ(harmonic(4), 25.0/12.0);
     EXPECT_DOUBLE_EQ(harmonic(5), 137.0/60.0);
+}
+
+TEST(CombinatoricsTest, EulerPolynomialTest) {
+    // 测试基本情况
+    EXPECT_NEAR(combinatorics::euler_polynomial(0, 0.5), 1.0, 1e-10);
+    EXPECT_NEAR(combinatorics::euler_polynomial(1, 0.5), 0.0, 1e-10);
+    EXPECT_NEAR(combinatorics::euler_polynomial(2, 0.5), -0.25, 1e-10);
+    
+    // 测试对称性
+    double x = 0.3;
+    EXPECT_NEAR(combinatorics::euler_polynomial(3, x), 
+                -combinatorics::euler_polynomial(3, 1.0 - x), 1e-10);
+}
+
+TEST(CombinatoricsTest, BernoulliPolynomialTest) {
+    // 测试基本情况
+    EXPECT_NEAR(combinatorics::bernoulli_polynomial(0, 0.5), 1.0, 1e-10);
+    EXPECT_NEAR(combinatorics::bernoulli_polynomial(1, 0.5), 0.0, 1e-10);
+    EXPECT_NEAR(combinatorics::bernoulli_polynomial(2, 0.5), -0.083333, 1e-6);
+    
+    // 测试递推关系
+    double x = 0.3;
+    double b2 = combinatorics::bernoulli_polynomial(2, x);
+    double b3 = combinatorics::bernoulli_polynomial(3, x);
+    double b4 = combinatorics::bernoulli_polynomial(4, x);
+    EXPECT_NEAR(b4, x * b3 - 0.5 * b2, 1e-10);
+}
+
+TEST(CombinatoricsTest, GeneralizedHarmonicTest) {
+    // 测试基本情况
+    EXPECT_NEAR(combinatorics::generalized_harmonic(1, 1.0), 1.0, 1e-10);
+    EXPECT_NEAR(combinatorics::generalized_harmonic(2, 1.0), 1.5, 1e-10);
+    EXPECT_NEAR(combinatorics::generalized_harmonic(3, 2.0), 1.361111, 1e-6);
+    
+    // 测试无效参数
+    EXPECT_THROW(combinatorics::generalized_harmonic(5, 0.0), std::invalid_argument);
+    EXPECT_THROW(combinatorics::generalized_harmonic(5, -1.0), std::invalid_argument);
+}
+
+TEST(CombinatoricsTest, PolylogarithmTest) {
+    // 测试基本情况
+    EXPECT_NEAR(combinatorics::polylogarithm(1.0, 0.5), 0.693147, 1e-6);
+    EXPECT_NEAR(combinatorics::polylogarithm(2.0, 0.5), 0.582241, 1e-6);
+    EXPECT_NEAR(combinatorics::polylogarithm(3.0, 0.5), 0.537213, 1e-6);
+    
+    // 测试无效参数
+    EXPECT_THROW(combinatorics::polylogarithm(0.0, 0.5), std::invalid_argument);
+    EXPECT_THROW(combinatorics::polylogarithm(-1.0, 0.5), std::invalid_argument);
+    EXPECT_THROW(combinatorics::polylogarithm(1.0, 1.0), std::invalid_argument);
+    EXPECT_THROW(combinatorics::polylogarithm(1.0, -1.0), std::invalid_argument);
 } 

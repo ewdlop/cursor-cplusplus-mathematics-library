@@ -130,4 +130,57 @@ TEST(ProbabilityTest, ChiSquaredDistributionTest) {
     // 测试随机采样
     double sample = chi.sample();
     EXPECT_GE(sample, 0.0);
+}
+
+TEST(ProbabilityTest, TDistributionTest) {
+    probability::TDistribution dist(10);
+    
+    // 测试无效参数
+    EXPECT_THROW(probability::TDistribution(0), std::invalid_argument);
+    EXPECT_THROW(probability::TDistribution(-1), std::invalid_argument);
+    
+    // 测试PDF
+    EXPECT_GT(dist.pdf(0.0), 0.0);
+    EXPECT_NEAR(dist.pdf(0.0), 0.389108, 1e-6);
+    EXPECT_GT(dist.pdf(1.0), 0.0);
+    EXPECT_GT(dist.pdf(-1.0), 0.0);
+    
+    // 测试CDF
+    EXPECT_NEAR(dist.cdf(0.0), 0.5, 1e-10);
+    EXPECT_GT(dist.cdf(1.0), 0.5);
+    EXPECT_LT(dist.cdf(-1.0), 0.5);
+    
+    // 测试分位数
+    EXPECT_NEAR(probability::TDistribution::quantile(10, 0.5), 0.0, 1e-10);
+    EXPECT_GT(probability::TDistribution::quantile(10, 0.75), 0.0);
+    EXPECT_LT(probability::TDistribution::quantile(10, 0.25), 0.0);
+    
+    // 测试随机采样
+    double sample = dist.sample();
+    EXPECT_TRUE(std::isfinite(sample));
+}
+
+TEST(ProbabilityTest, FDistributionTest) {
+    probability::FDistribution dist(5, 10);
+    
+    // 测试无效参数
+    EXPECT_THROW(probability::FDistribution(0, 10), std::invalid_argument);
+    EXPECT_THROW(probability::FDistribution(5, 0), std::invalid_argument);
+    EXPECT_THROW(probability::FDistribution(-1, 10), std::invalid_argument);
+    EXPECT_THROW(probability::FDistribution(5, -1), std::invalid_argument);
+    
+    // 测试PDF
+    EXPECT_GT(dist.pdf(1.0), 0.0);
+    EXPECT_NEAR(dist.pdf(1.0), 0.559467, 1e-6);
+    EXPECT_EQ(dist.pdf(-1.0), 0.0);
+    
+    // 测试CDF
+    EXPECT_GT(dist.cdf(1.0), 0.0);
+    EXPECT_LT(dist.cdf(1.0), 1.0);
+    EXPECT_EQ(dist.cdf(-1.0), 0.0);
+    
+    // 测试随机采样
+    double sample = dist.sample();
+    EXPECT_TRUE(std::isfinite(sample));
+    EXPECT_GE(sample, 0.0);
 } 
