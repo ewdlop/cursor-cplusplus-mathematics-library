@@ -24,6 +24,26 @@ A comprehensive C++ mathematics library that provides various statistical functi
   - Spearman Rank Correlation / 斯皮尔曼等级相关系数
   - Kendall Rank Correlation / 肯德尔等级相关系数
 
+### Linear Algebra / 线性代数
+- Matrix Operations / 矩阵运算
+  - Basic Operations (Addition, Subtraction, Multiplication) / 基础运算（加法、减法、乘法）
+  - Matrix Transpose and Inverse / 矩阵转置和逆
+  - Determinant and Trace / 行列式和迹
+  - Eigenvalues and Eigenvectors / 特征值和特征向量
+- Vector Operations / 向量运算
+  - Dot Product and Cross Product / 点积和叉积
+  - Vector Norms / 向量范数
+  - Vector Projection / 向量投影
+- Decomposition Methods / 分解方法
+  - LU Decomposition / LU分解
+  - QR Decomposition / QR分解
+  - Singular Value Decomposition (SVD) / 奇异值分解
+  - Cholesky Decomposition / 乔列斯基分解
+- Linear Systems / 线性系统
+  - Solving Linear Equations / 求解线性方程组
+  - Least Squares Solutions / 最小二乘解
+  - Matrix Condition Number / 矩阵条件数
+
 ### Probability Distributions / 概率分布
 - Continuous Distributions / 连续分布
   - Normal Distribution / 正态分布
