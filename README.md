@@ -1,8 +1,90 @@
-# C++ Mathematics Library / C++数学库
+# C++ 数学库 / C++ Mathematics Library
 
-A comprehensive C++ mathematics library that provides various statistical functions, probability distributions, and combinatorial mathematics functions.
+## 简介 | Introduction
 
-一个全面的C++数学库，提供各种统计函数、概率分布和组合数学函数。
+本库为 C++ 提供了丰富的数学功能，包括统计、概率、组合数学和线性代数。现已将原有的 `mathlib.hpp` 拆分为多个子模块，便于按需引用和维护。
+
+This library provides rich mathematical functionalities for C++, including statistics, probability, combinatorics, and linear algebra. The original `mathlib.hpp` has been split into several submodules for easier and more flexible usage.
+
+---
+
+## 目录结构 | Directory Structure
+
+```
+include/
+  mathlib/
+    statistics.hpp      # 统计相关
+    probability.hpp     # 概率相关
+    combinatorics.hpp   # 组合数学相关
+    linear_algebra.hpp  # 线性代数相关
+```
+
+---
+
+## 如何使用 | How to Use
+
+**请注意：自 v2.0 起，`mathlib.hpp` 已被移除。请直接包含所需的子模块头文件。**
+
+**Note:** Since v2.0, `mathlib.hpp` has been removed. Please include the required submodule headers directly.
+
+### 示例 | Example
+
+```cpp
+#include "mathlib/statistics.hpp"
+#include "mathlib/probability.hpp"
+#include "mathlib/combinatorics.hpp"
+#include "mathlib/linear_algebra.hpp"
+
+#include <vector>
+#include <iostream>
+
+int main() {
+    std::vector<double> data = {1.0, 2.0, 3.0, 4.0, 5.0};
+    std::cout << "Mean: " << mathlib::statistics::mean(data) << std::endl;
+    std::cout << "Variance: " << mathlib::statistics::variance(data) << std::endl;
+    std::cout << "Normal PDF(0): " << mathlib::probability::normal_pdf(0.0) << std::endl;
+    std::cout << "5! = " << mathlib::combinatorics::factorial<int>(5) << std::endl;
+    mathlib::linear_algebra::Matrix<double> A({{1,2},{3,4}});
+    std::cout << "A(0,0): " << A(0,0) << std::endl;
+    return 0;
+}
+```
+
+---
+
+## 主要功能 | Main Features
+
+- **统计 (Statistics):**
+  - 均值、方差、标准差、中位数、众数、偏度、峰度、相关性、协方差、分位数、假设检验、置信区间等
+- **概率 (Probability):**
+  - 常见分布（正态、二项、泊松）、概率密度/分布函数、熵、互信息、马尔可夫链、随机数生成等
+- **组合数学 (Combinatorics):**
+  - 阶乘、组合数、排列数、多项式、生成函数、斯特林数、贝尔数等
+- **线性代数 (Linear Algebra):**
+  - 矩阵与向量运算、行列式、迹、LU分解、特征值/特征向量、线性方程组、最小二乘、条件数等
+
+---
+
+## 兼容性与迁移 | Compatibility & Migration
+
+- **如您的代码原本包含 `#include "mathlib.hpp"`，请替换为需要的子模块头文件。**
+- **If your code previously included `#include "mathlib.hpp"`, please replace it with the required submodule headers.**
+
+---
+
+## 构建与测试 | Build & Test
+
+请确保您的 include 路径包含 `include/` 目录，并根据需要链接 Google Test 等测试框架。
+
+Make sure your include path contains the `include/` directory, and link with Google Test or other frameworks as needed.
+
+---
+
+## 反馈与贡献 | Feedback & Contribution
+
+欢迎提交 issue 或 pull request，帮助本库完善！
+
+Feel free to submit issues or pull requests to help improve this library!
 
 ## Features / 功能特点
 
@@ -88,50 +170,6 @@ mkdir build
 cd build
 cmake ..
 make
-```
-
-## Usage / 使用
-```cpp
-#include "mathlib.hpp"
-#include "mathlib/linear_algebra.hpp"
-
-// 统计函数示例 / Statistics example
-std::vector<double> data = {1.0, 2.0, 3.0, 4.0, 5.0};
-double mean = mathlib::statistics::mean(data);
-double variance = mathlib::statistics::variance(data);
-
-// 概率分布示例 / Probability distribution example
-mathlib::probability::NormalDistribution normal(0.0, 1.0);
-double pdf = normal.pdf(0.0);
-double cdf = normal.cdf(1.0);
-
-// 组合数学示例 / Combinatorics example
-unsigned long long comb = mathlib::combinatorics::combination(5, 2);
-double euler_poly = mathlib::combinatorics::euler_polynomial(3, 0.5);
-
-// 矩阵运算示例 / Matrix operations example
-mathlib::linear_algebra::Matrix<double> A({{1, 2}, {3, 4}});
-mathlib::linear_algebra::Matrix<double> B({{5, 6}, {7, 8}});
-
-// 矩阵加法和乘法 / Matrix addition and multiplication
-auto C = A + B;
-auto D = A * B;
-
-// 矩阵转置 / Matrix transpose
-auto A_transpose = A.transpose();
-
-// 向量运算示例 / Vector operations example
-mathlib::linear_algebra::Vector<double> v1({1, 2, 3});
-mathlib::linear_algebra::Vector<double> v2({4, 5, 6});
-
-// 点积和范数 / Dot product and norm
-double dot_product = v1.dot(v2);
-double norm = v1.norm();
-
-// 线性方程组求解示例 / Linear system solving example
-mathlib::linear_algebra::Matrix<double> A({{2, 1}, {1, 3}});
-mathlib::linear_algebra::Vector<double> b({5, 7});
-auto x = mathlib::linear_algebra::solve_linear_system(A, b);
 ```
 
 ## Testing / 测试
