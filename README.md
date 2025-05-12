@@ -93,6 +93,7 @@ make
 ## Usage / 使用
 ```cpp
 #include "mathlib.hpp"
+#include "mathlib/linear_algebra.hpp"
 
 // 统计函数示例 / Statistics example
 std::vector<double> data = {1.0, 2.0, 3.0, 4.0, 5.0};
@@ -107,6 +108,30 @@ double cdf = normal.cdf(1.0);
 // 组合数学示例 / Combinatorics example
 unsigned long long comb = mathlib::combinatorics::combination(5, 2);
 double euler_poly = mathlib::combinatorics::euler_polynomial(3, 0.5);
+
+// 矩阵运算示例 / Matrix operations example
+mathlib::linear_algebra::Matrix<double> A({{1, 2}, {3, 4}});
+mathlib::linear_algebra::Matrix<double> B({{5, 6}, {7, 8}});
+
+// 矩阵加法和乘法 / Matrix addition and multiplication
+auto C = A + B;
+auto D = A * B;
+
+// 矩阵转置 / Matrix transpose
+auto A_transpose = A.transpose();
+
+// 向量运算示例 / Vector operations example
+mathlib::linear_algebra::Vector<double> v1({1, 2, 3});
+mathlib::linear_algebra::Vector<double> v2({4, 5, 6});
+
+// 点积和范数 / Dot product and norm
+double dot_product = v1.dot(v2);
+double norm = v1.norm();
+
+// 线性方程组求解示例 / Linear system solving example
+mathlib::linear_algebra::Matrix<double> A({{2, 1}, {1, 3}});
+mathlib::linear_algebra::Vector<double> b({5, 7});
+auto x = mathlib::linear_algebra::solve_linear_system(A, b);
 ```
 
 ## Testing / 测试
@@ -115,16 +140,30 @@ cd build
 make test
 ```
 
+The test suite includes comprehensive tests for:
+- Matrix operations and error handling
+- Vector operations
+- Linear system solving
+- Edge cases and invalid inputs
+
+测试套件包括：
+- 矩阵运算和错误处理
+- 向量运算
+- 线性方程组求解
+- 边界情况和无效输入
+
 ## Examples / 示例
 The library includes example programs demonstrating various features:
 - `statistics_example.cpp`: Statistical functions and tests
 - `probability_example.cpp`: Probability distributions
 - `combinatorics_example.cpp`: Combinatorial functions and polynomials
+- `linear_algebra_example.cpp`: Matrix and vector operations
 
 库包含演示各种功能的示例程序：
 - `statistics_example.cpp`：统计函数和检验
 - `probability_example.cpp`：概率分布
 - `combinatorics_example.cpp`：组合函数和多项式
+- `linear_algebra_example.cpp`：矩阵和向量运算
 
 ## License / 许可证
 MIT License / MIT许可证 
