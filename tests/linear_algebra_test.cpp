@@ -3,6 +3,7 @@
 #include <vector>
 #include <cmath>
 #include <complex>
+#include <random>
 
 using namespace mathlib::linear_algebra;
 
@@ -252,6 +253,198 @@ TEST(VectorTest, EdgeCases) {
     
     // 测试不同维度向量的夹角
     EXPECT_THROW(v1.angle(v3), std::invalid_argument);
+}
+
+// 生成随机矩阵
+template<typename T>
+Matrix<T> generate_random_matrix(size_t rows, size_t cols, T min = -1.0, T max = 1.0) {
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_real_distribution<T> dis(min, max);
+    
+    Matrix<T> m(rows, cols);
+    for (size_t i = 0; i < rows; ++i) {
+        for (size_t j = 0; j < cols; ++j) {
+            m(i, j) = dis(gen);
+        }
+    }
+    return m;
+}
+
+// 生成随机向量
+template<typename T>
+Vector<T> generate_random_vector(size_t size, T min = -1.0, T max = 1.0) {
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_real_distribution<T> dis(min, max);
+    
+    Vector<T> v(size);
+    for (size_t i = 0; i < size; ++i) {
+        v[i] = dis(gen);
+    }
+    return v;
+}
+
+// 矩阵运算的数值稳定性测试
+TEST(MatrixTest, NumericalStability) {
+    // 测试大矩阵乘法
+    Matrix<double> A = generate_random_matrix<double>(100, 100);
+    Matrix<double> B = generate_random_matrix<double>(100, 100);
+    Matrix<double> C = A * B;
+    
+    // 验证乘法结合律
+    Matrix<double> D = generate_random_matrix<double>(100, 100);
+    Matrix<double> left = (A * B) * D;
+    Matrix<double> right = A * (B * D);
+    EXPECT_TRUE(matrices_are_close(left, right, 1e-10));
+    
+    // 测试转置的幂等性
+    Matrix<double> A_transpose = A.transpose();
+    Matrix<double> A_transpose_transpose = A_transpose.transpose();
+    EXPECT_TRUE(matrices_are_close(A, A_transpose_transpose));
+}
+
+// 行列式计算测试
+TEST(MatrixTest, DeterminantProperties) {
+    // 测试单位矩阵的行列式
+    Matrix<double> I({{1, 0}, {0, 1}});
+    EXPECT_DOUBLE_EQ(I.determinant(), 1.0);
+    
+    // 测试行列式的乘法性质
+    Matrix<double> A = generate_random_matrix<double>(3, 3);
+    Matrix<double> B = generate_random_matrix<double>(3, 3);
+    double det_A = A.determinant();
+    double det_B = B.determinant();
+    double det_AB = (A * B).determinant();
+    EXPECT_TRUE(is_close(det_AB, det_A * det_B, 1e-10));
+    
+    // 测试奇异矩阵的行列式
+    Matrix<double> singular({{1, 1}, {1, 1}});
+    EXPECT_DOUBLE_EQ(singular.determinant(), 0.0);
+}
+
+// LU分解测试
+TEST(MatrixTest, LUDecompositionProperties) {
+    Matrix<double> A = generate_random_matrix<double>(5, 5);
+    auto [L, U] = A.lu_decomposition();
+    
+    // 验证L是下三角矩阵
+    for (size_t i = 0; i < L.get_rows(); ++i) {
+        for (size_t j = i + 1; j < L.get_cols(); ++j) {
+            EXPECT_DOUBLE_EQ(L(i, j), 0.0);
+        }
+    }
+    
+    // 验证U是上三角矩阵
+    for (size_t i = 0; i < U.get_rows(); ++i) {
+        for (size_t j = 0; j < i; ++j) {
+            EXPECT_DOUBLE_EQ(U(i, j), 0.0);
+        }
+    }
+    
+    // 验证L的对角线元素为1
+    for (size_t i = 0; i < L.get_rows(); ++i) {
+        EXPECT_DOUBLE_EQ(L(i, i), 1.0);
+    }
+    
+    // 验证A = LU
+    Matrix<double> reconstructed = L * U;
+    EXPECT_TRUE(matrices_are_close(A, reconstructed, 1e-10));
+}
+
+// 特征值计算测试
+TEST(MatrixTest, EigenvalueProperties) {
+    // 测试对称矩阵的特征值
+    Matrix<double> A({{2, 1}, {1, 2}});
+    auto [eigenvalues, eigenvectors] = A.eigenvalues_eigenvectors();
+    
+    // 验证特征值是实数
+    for (const auto& lambda : eigenvalues) {
+        EXPECT_NEAR(lambda.imag(), 0.0, 1e-10);
+    }
+    
+    // 验证特征向量的正交性
+    for (size_t i = 0; i < eigenvectors.size(); ++i) {
+        for (size_t j = i + 1; j < eigenvectors.size(); ++j) {
+            double dot_product = eigenvectors[i].dot(eigenvectors[j]);
+            EXPECT_NEAR(dot_product, 0.0, 1e-10);
+        }
+    }
+    
+    // 验证特征值方程
+    for (size_t i = 0; i < eigenvalues.size(); ++i) {
+        Vector<double> Av = A * eigenvectors[i];
+        Vector<double> lambda_v = eigenvectors[i] * eigenvalues[i].real();
+        EXPECT_TRUE(vectors_are_close(Av, lambda_v, 1e-10));
+    }
+}
+
+// 向量运算测试
+TEST(VectorTest, VectorOperations) {
+    // 测试向量的正交性
+    Vector<double> v1({1, 0, 0});
+    Vector<double> v2({0, 1, 0});
+    Vector<double> v3({0, 0, 1});
+    
+    EXPECT_DOUBLE_EQ(v1.dot(v2), 0.0);
+    EXPECT_DOUBLE_EQ(v2.dot(v3), 0.0);
+    EXPECT_DOUBLE_EQ(v3.dot(v1), 0.0);
+    
+    // 测试叉积的性质
+    Vector<double> cross = v1.cross(v2);
+    EXPECT_TRUE(vectors_are_close(cross, v3));
+    
+    // 测试投影的性质
+    Vector<double> v({1, 1, 1});
+    Vector<double> proj = v.project(v1);
+    EXPECT_TRUE(vectors_are_close(proj, Vector<double>({1, 0, 0})));
+    
+    // 验证投影后的残差与投影方向正交
+    Vector<double> residual = v - proj;
+    EXPECT_NEAR(residual.dot(v1), 0.0, 1e-10);
+}
+
+// 最小二乘解测试
+TEST(LinearSystemTest, LeastSquaresProperties) {
+    // 测试超定系统
+    Matrix<double> A({{1, 1}, {1, 2}, {1, 3}});
+    Vector<double> b({1, 2, 2});
+    
+    Vector<double> x = least_squares(A, b);
+    
+    // 验证法方程
+    Matrix<double> ATA = A.transpose() * A;
+    Vector<double> ATb = A.transpose() * b;
+    Vector<double> ATAx = ATA * x;
+    EXPECT_TRUE(vectors_are_close(ATAx, ATb, 1e-10));
+    
+    // 验证残差与A的列空间正交
+    Vector<double> residual = A * x - b;
+    for (size_t j = 0; j < A.get_cols(); ++j) {
+        Vector<double> col(A.get_rows());
+        for (size_t i = 0; i < A.get_rows(); ++i) {
+            col[i] = A(i, j);
+        }
+        EXPECT_NEAR(residual.dot(col), 0.0, 1e-10);
+    }
+}
+
+// 条件数测试
+TEST(MatrixTest, ConditionNumberProperties) {
+    // 测试单位矩阵的条件数
+    Matrix<double> I({{1, 0}, {0, 1}});
+    EXPECT_DOUBLE_EQ(condition_number(I), 1.0);
+    
+    // 测试条件数的尺度不变性
+    Matrix<double> A = generate_random_matrix<double>(3, 3);
+    double scale = 2.0;
+    Matrix<double> scaled_A = A * scale;
+    EXPECT_DOUBLE_EQ(condition_number(scaled_A), condition_number(A));
+    
+    // 测试病态矩阵
+    Matrix<double> ill_conditioned({{1, 1}, {1, 1.0001}});
+    double cond = condition_number(ill_conditioned);
+    EXPECT_GT(cond, 1000);
 }
 
 int main(int argc, char **argv) {

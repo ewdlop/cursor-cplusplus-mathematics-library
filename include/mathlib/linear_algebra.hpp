@@ -128,28 +128,56 @@ public:
 
         Matrix<T> L(rows, cols);
         Matrix<T> U(rows, cols);
+        Matrix<T> A = *this;  // 创建副本以避免修改原矩阵
 
         // 初始化L为单位矩阵
         for (size_t i = 0; i < rows; ++i) {
             L(i, i) = 1;
         }
 
-        // 计算LU分解
-        for (size_t i = 0; i < rows; ++i) {
-            for (size_t j = i; j < cols; ++j) {
-                T sum = 0;
-                for (size_t k = 0; k < i; ++k) {
-                    sum += L(i, k) * U(k, j);
+        // 使用部分主元法进行LU分解
+        for (size_t k = 0; k < rows; ++k) {
+            // 选择主元
+            size_t max_row = k;
+            T max_val = std::abs(A(k, k));
+            for (size_t i = k + 1; i < rows; ++i) {
+                T val = std::abs(A(i, k));
+                if (val > max_val) {
+                    max_val = val;
+                    max_row = i;
                 }
-                U(i, j) = data[i][j] - sum;
             }
 
-            for (size_t j = i + 1; j < rows; ++j) {
-                T sum = 0;
-                for (size_t k = 0; k < i; ++k) {
-                    sum += L(j, k) * U(k, i);
+            // 如果主元太小，认为矩阵奇异
+            if (max_val < 1e-10) {
+                throw std::runtime_error("Matrix is singular or nearly singular");
+            }
+
+            // 交换行
+            if (max_row != k) {
+                for (size_t j = 0; j < cols; ++j) {
+                    std::swap(A(k, j), A(max_row, j));
+                    if (j < k) {
+                        std::swap(L(k, j), L(max_row, j));
+                    }
                 }
-                L(j, i) = (data[j][i] - sum) / U(i, i);
+            }
+
+            // 计算U的第k行和L的第k列
+            for (size_t j = k; j < cols; ++j) {
+                T sum = 0;
+                for (size_t i = 0; i < k; ++i) {
+                    sum += L(k, i) * U(i, j);
+                }
+                U(k, j) = A(k, j) - sum;
+            }
+
+            for (size_t i = k + 1; i < rows; ++i) {
+                T sum = 0;
+                for (size_t j = 0; j < k; ++j) {
+                    sum += L(i, j) * U(j, k);
+                }
+                L(i, k) = (A(i, k) - sum) / U(k, k);
             }
         }
 
@@ -166,6 +194,7 @@ public:
         std::vector<Vector<T>> eigenvectors;
         Matrix<T> A = *this;
 
+        // 使用QR迭代法计算特征值
         for (size_t i = 0; i < rows; ++i) {
             // 初始化随机向量
             Vector<T> v(rows);
@@ -174,21 +203,113 @@ public:
             }
             v = v * (1.0 / v.norm());
 
+            T prev_lambda = 0;
+            bool converged = false;
+
             // 幂迭代
-            for (size_t iter = 0; iter < max_iterations; ++iter) {
+            for (size_t iter = 0; iter < max_iterations && !converged; ++iter) {
                 Vector<T> v_new = A * v;
                 T lambda = v_new.norm();
-                v = v_new * (1.0 / lambda);
-
-                if (iter > 0 && std::abs(lambda - eigenvalues.back().real()) < 1e-6) {
-                    eigenvalues.push_back(std::complex<T>(lambda, 0));
-                    eigenvectors.push_back(v);
-                    break;
+                
+                // 检查收敛性
+                if (iter > 0 && std::abs(lambda - prev_lambda) < 1e-10) {
+                    converged = true;
                 }
+                
+                v = v_new * (1.0 / lambda);
+                prev_lambda = lambda;
             }
+
+            if (!converged) {
+                throw std::runtime_error("Eigenvalue computation did not converge");
+            }
+
+            eigenvalues.push_back(std::complex<T>(prev_lambda, 0));
+            eigenvectors.push_back(v);
+
+            // 收缩矩阵以计算下一个特征值
+            A = A - (prev_lambda * (v * v.transpose()));
         }
 
         return {eigenvalues, eigenvectors};
+    }
+
+    // 添加缺失的运算符重载
+    Matrix operator-(const Matrix& other) const {
+        if (rows != other.rows || cols != other.cols) {
+            throw std::invalid_argument("Matrix dimensions do not match");
+        }
+        Matrix result(rows, cols);
+        for (size_t i = 0; i < rows; ++i) {
+            for (size_t j = 0; j < cols; ++j) {
+                result(i, j) = data[i][j] - other(i, j);
+            }
+        }
+        return result;
+    }
+
+    Matrix& operator+=(const Matrix& other) {
+        if (rows != other.rows || cols != other.cols) {
+            throw std::invalid_argument("Matrix dimensions do not match");
+        }
+        for (size_t i = 0; i < rows; ++i) {
+            for (size_t j = 0; j < cols; ++j) {
+                data[i][j] += other(i, j);
+            }
+        }
+        return *this;
+    }
+
+    Matrix& operator-=(const Matrix& other) {
+        if (rows != other.rows || cols != other.cols) {
+            throw std::invalid_argument("Matrix dimensions do not match");
+        }
+        for (size_t i = 0; i < rows; ++i) {
+            for (size_t j = 0; j < cols; ++j) {
+                data[i][j] -= other(i, j);
+            }
+        }
+        return *this;
+    }
+
+    Matrix& operator*=(const T& scalar) {
+        for (size_t i = 0; i < rows; ++i) {
+            for (size_t j = 0; j < cols; ++j) {
+                data[i][j] *= scalar;
+            }
+        }
+        return *this;
+    }
+
+    // 标量乘法
+    friend Matrix operator*(const Matrix& m, const T& scalar) {
+        Matrix result(m.rows, m.cols);
+        for (size_t i = 0; i < m.rows; ++i) {
+            for (size_t j = 0; j < m.cols; ++j) {
+                result(i, j) = m(i, j) * scalar;
+            }
+        }
+        return result;
+    }
+
+    friend Matrix operator*(const T& scalar, const Matrix& m) {
+        return m * scalar;
+    }
+
+    // 矩阵-向量乘法
+    friend Vector<T> operator*(const Matrix& m, const Vector<T>& v) {
+        if (m.cols != v.get_size()) {
+            throw std::invalid_argument("Matrix and vector dimensions do not match");
+        }
+        Vector<T> result(m.rows);
+        for (size_t i = 0; i < m.rows; ++i) {
+            T sum = 0;
+            for (size_t j = 0; j < m.cols; ++j) {
+                sum += m(i, j) * v[j];
+            }
+            result[i] = sum;
+        }
+        return result;
     }
 };
 
@@ -254,6 +375,69 @@ public:
             throw std::invalid_argument("Vector dimensions do not match");
         }
         return std::acos(dot(other) / (norm() * other.norm()));
+    }
+
+    // 添加缺失的运算符重载
+    Vector operator+(const Vector& other) const {
+        if (size != other.size) {
+            throw std::invalid_argument("Vector dimensions do not match");
+        }
+        Vector result(size);
+        for (size_t i = 0; i < size; ++i) {
+            result[i] = data[i] + other[i];
+        }
+        return result;
+    }
+
+    Vector operator-(const Vector& other) const {
+        if (size != other.size) {
+            throw std::invalid_argument("Vector dimensions do not match");
+        }
+        Vector result(size);
+        for (size_t i = 0; i < size; ++i) {
+            result[i] = data[i] - other[i];
+        }
+        return result;
+    }
+
+    Vector& operator+=(const Vector& other) {
+        if (size != other.size) {
+            throw std::invalid_argument("Vector dimensions do not match");
+        }
+        for (size_t i = 0; i < size; ++i) {
+            data[i] += other[i];
+        }
+        return *this;
+    }
+
+    Vector& operator-=(const Vector& other) {
+        if (size != other.size) {
+            throw std::invalid_argument("Vector dimensions do not match");
+        }
+        for (size_t i = 0; i < size; ++i) {
+            data[i] -= other[i];
+        }
+        return *this;
+    }
+
+    Vector& operator*=(const T& scalar) {
+        for (size_t i = 0; i < size; ++i) {
+            data[i] *= scalar;
+        }
+        return *this;
+    }
+
+    // 标量乘法
+    friend Vector operator*(const Vector& v, const T& scalar) {
+        Vector result(v.size);
+        for (size_t i = 0; i < v.size; ++i) {
+            result[i] = v[i] * scalar;
+        }
+        return result;
+    }
+
+    friend Vector operator*(const T& scalar, const Vector& v) {
+        return v * scalar;
     }
 };
 
