@@ -2,6 +2,7 @@
 #include <gtest/gtest.h>
 #include <vector>
 #include <cmath>
+#include <complex>
 
 using namespace mathlib::linear_algebra;
 
@@ -147,6 +148,110 @@ TEST(LinearSystemTest, EdgeCases) {
     Matrix<double> non_square(2, 3);
     Vector<double> b2(2);
     EXPECT_THROW(solve_linear_system(non_square, b2), std::invalid_argument);
+}
+
+// 矩阵高级运算测试
+TEST(MatrixTest, AdvancedOperations) {
+    Matrix<double> m({{4, 1}, {1, 3}});
+    
+    // 测试行列式
+    EXPECT_DOUBLE_EQ(m.determinant(), 11);
+    
+    // 测试迹
+    EXPECT_DOUBLE_EQ(m.trace(), 7);
+    
+    // 测试LU分解
+    auto [L, U] = m.lu_decomposition();
+    Matrix<double> product = L * U;
+    EXPECT_TRUE(matrices_are_close(product, m));
+    
+    // 测试特征值和特征向量
+    auto [eigenvalues, eigenvectors] = m.eigenvalues_eigenvectors();
+    EXPECT_EQ(eigenvalues.size(), 2);
+    EXPECT_EQ(eigenvectors.size(), 2);
+    
+    // 验证特征值和特征向量
+    for (size_t i = 0; i < eigenvalues.size(); ++i) {
+        Vector<double> Av = m * eigenvectors[i];
+        Vector<double> lambda_v = eigenvectors[i] * eigenvalues[i].real();
+        EXPECT_TRUE(vectors_are_close(Av, lambda_v));
+    }
+}
+
+// 向量高级运算测试
+TEST(VectorTest, AdvancedOperations) {
+    Vector<double> v1({1, 0, 0});
+    Vector<double> v2({0, 1, 0});
+    
+    // 测试叉积
+    Vector<double> cross_product = v1.cross(v2);
+    Vector<double> expected_cross({0, 0, 1});
+    EXPECT_TRUE(vectors_are_close(cross_product, expected_cross));
+    
+    // 测试投影
+    Vector<double> v3({1, 1, 0});
+    Vector<double> projection = v3.project(v1);
+    Vector<double> expected_projection({1, 0, 0});
+    EXPECT_TRUE(vectors_are_close(projection, expected_projection));
+    
+    // 测试夹角
+    double angle = v1.angle(v2);
+    EXPECT_DOUBLE_EQ(angle, M_PI / 2);
+}
+
+// 矩阵条件数测试
+TEST(MatrixTest, ConditionNumber) {
+    // 测试良态矩阵
+    Matrix<double> well_conditioned({{1, 0}, {0, 1}});
+    EXPECT_DOUBLE_EQ(condition_number(well_conditioned), 1.0);
+    
+    // 测试病态矩阵
+    Matrix<double> ill_conditioned({{1, 1}, {1, 1.0001}});
+    double cond = condition_number(ill_conditioned);
+    EXPECT_GT(cond, 1000); // 条件数应该很大
+}
+
+// 最小二乘解测试
+TEST(LinearSystemTest, LeastSquares) {
+    // 超定系统
+    Matrix<double> A({{1, 1}, {1, 2}, {1, 3}});
+    Vector<double> b({1, 2, 2});
+    
+    Vector<double> x = least_squares(A, b);
+    
+    // 验证残差
+    Vector<double> residual = A * x - b;
+    EXPECT_LT(residual.norm(), 1e-6);
+}
+
+// 边界情况测试
+TEST(MatrixTest, EdgeCases) {
+    // 测试非方阵的行列式
+    Matrix<double> non_square(2, 3);
+    EXPECT_THROW(non_square.determinant(), std::invalid_argument);
+    
+    // 测试非方阵的迹
+    EXPECT_THROW(non_square.trace(), std::invalid_argument);
+    
+    // 测试非方阵的LU分解
+    EXPECT_THROW(non_square.lu_decomposition(), std::invalid_argument);
+    
+    // 测试非方阵的特征值计算
+    EXPECT_THROW(non_square.eigenvalues_eigenvectors(), std::invalid_argument);
+}
+
+TEST(VectorTest, EdgeCases) {
+    // 测试非3D向量的叉积
+    Vector<double> v1(2);
+    Vector<double> v2(2);
+    EXPECT_THROW(v1.cross(v2), std::invalid_argument);
+    
+    // 测试不同维度向量的投影
+    Vector<double> v3(3);
+    EXPECT_THROW(v1.project(v3), std::invalid_argument);
+    
+    // 测试不同维度向量的夹角
+    EXPECT_THROW(v1.angle(v3), std::invalid_argument);
 }
 
 int main(int argc, char **argv) {
