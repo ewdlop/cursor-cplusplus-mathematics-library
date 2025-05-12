@@ -116,4 +116,85 @@ TEST(StatisticsTest, QuantileTest) {
     // 测试边界值
     EXPECT_DOUBLE_EQ(quantile(values, 0.0), 1.0);
     EXPECT_DOUBLE_EQ(quantile(values, 1.0), 5.0);
+}
+
+TEST(StatisticsTest, CovarianceTest) {
+    // 测试空向量
+    std::vector<double> empty;
+    std::vector<double> data = {1.0, 2.0, 3.0};
+    EXPECT_THROW(covariance(empty, data), std::invalid_argument);
+    EXPECT_THROW(covariance(data, empty), std::invalid_argument);
+
+    // 测试长度不匹配
+    std::vector<double> x = {1.0, 2.0};
+    std::vector<double> y = {1.0, 2.0, 3.0};
+    EXPECT_THROW(covariance(x, y), std::invalid_argument);
+
+    // 测试基本计算
+    std::vector<double> a = {1.0, 2.0, 3.0, 4.0, 5.0};
+    std::vector<double> b = {2.0, 4.0, 5.0, 4.0, 5.0};
+    EXPECT_DOUBLE_EQ(covariance(a, b), 1.6);
+}
+
+TEST(StatisticsTest, CorrelationTest) {
+    // 测试空向量
+    std::vector<double> empty;
+    std::vector<double> data = {1.0, 2.0, 3.0};
+    EXPECT_THROW(correlation(empty, data), std::invalid_argument);
+    EXPECT_THROW(correlation(data, empty), std::invalid_argument);
+
+    // 测试长度不匹配
+    std::vector<double> x = {1.0, 2.0};
+    std::vector<double> y = {1.0, 2.0, 3.0};
+    EXPECT_THROW(correlation(x, y), std::invalid_argument);
+
+    // 测试标准差为零
+    std::vector<double> same = {1.0, 1.0, 1.0};
+    EXPECT_THROW(correlation(same, data), std::runtime_error);
+
+    // 测试完全相关
+    std::vector<double> a = {1.0, 2.0, 3.0, 4.0, 5.0};
+    std::vector<double> b = {2.0, 4.0, 6.0, 8.0, 10.0};
+    EXPECT_DOUBLE_EQ(correlation(a, b), 1.0);
+
+    // 测试完全负相关
+    std::vector<double> c = {1.0, 2.0, 3.0, 4.0, 5.0};
+    std::vector<double> d = {10.0, 8.0, 6.0, 4.0, 2.0};
+    EXPECT_DOUBLE_EQ(correlation(c, d), -1.0);
+}
+
+TEST(StatisticsTest, SkewnessTest) {
+    // 测试空向量
+    std::vector<double> empty;
+    EXPECT_THROW(skewness(empty), std::invalid_argument);
+
+    // 测试标准差为零
+    std::vector<double> same = {1.0, 1.0, 1.0};
+    EXPECT_THROW(skewness(same), std::runtime_error);
+
+    // 测试对称分布
+    std::vector<double> symmetric = {-2.0, -1.0, 0.0, 1.0, 2.0};
+    EXPECT_NEAR(skewness(symmetric), 0.0, 0.0001);
+
+    // 测试右偏分布
+    std::vector<double> right_skewed = {1.0, 2.0, 2.0, 3.0, 10.0};
+    EXPECT_GT(skewness(right_skewed), 0.0);
+}
+
+TEST(StatisticsTest, KurtosisTest) {
+    // 测试空向量
+    std::vector<double> empty;
+    EXPECT_THROW(kurtosis(empty), std::invalid_argument);
+
+    // 测试标准差为零
+    std::vector<double> same = {1.0, 1.0, 1.0};
+    EXPECT_THROW(kurtosis(same), std::runtime_error);
+
+    // 测试正态分布（峰度应接近0）
+    std::vector<double> normal = {-2.0, -1.0, 0.0, 1.0, 2.0};
+    EXPECT_NEAR(kurtosis(normal), 0.0, 0.1);
+
+    // 测试尖峰分布
+    std::vector<double> peaked = {-1.0, -1.0, 0.0, 1.0, 1.0};
+    EXPECT_GT(kurtosis(peaked), 0.0);
 } 

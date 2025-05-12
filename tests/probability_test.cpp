@@ -84,4 +84,50 @@ TEST(ProbabilityTest, PoissonDistributionTest) {
     // 测试随机采样
     int sample = pois.sample();
     EXPECT_GE(sample, 0);
+}
+
+TEST(ProbabilityTest, ExponentialDistributionTest) {
+    // 测试无效参数
+    EXPECT_THROW(ExponentialDistribution(0), std::invalid_argument);
+    EXPECT_THROW(ExponentialDistribution(-1), std::invalid_argument);
+
+    // 测试基本指数分布
+    ExponentialDistribution exp(2.0);
+    
+    // 测试PDF
+    EXPECT_DOUBLE_EQ(exp.pdf(-1.0), 0.0);
+    EXPECT_DOUBLE_EQ(exp.pdf(0.0), 2.0);
+    EXPECT_NEAR(exp.pdf(1.0), 0.2707, 0.0001);
+    
+    // 测试CDF
+    EXPECT_DOUBLE_EQ(exp.cdf(-1.0), 0.0);
+    EXPECT_DOUBLE_EQ(exp.cdf(0.0), 0.0);
+    EXPECT_NEAR(exp.cdf(1.0), 0.8647, 0.0001);
+
+    // 测试随机采样
+    double sample = exp.sample();
+    EXPECT_GE(sample, 0.0);
+}
+
+TEST(ProbabilityTest, ChiSquaredDistributionTest) {
+    // 测试无效参数
+    EXPECT_THROW(ChiSquaredDistribution(0), std::invalid_argument);
+    EXPECT_THROW(ChiSquaredDistribution(-1), std::invalid_argument);
+
+    // 测试基本卡方分布
+    ChiSquaredDistribution chi(3);
+    
+    // 测试PDF
+    EXPECT_DOUBLE_EQ(chi.pdf(-1.0), 0.0);
+    EXPECT_NEAR(chi.pdf(1.0), 0.2419, 0.0001);
+    EXPECT_NEAR(chi.pdf(2.0), 0.2076, 0.0001);
+    
+    // 测试CDF
+    EXPECT_DOUBLE_EQ(chi.cdf(-1.0), 0.0);
+    EXPECT_NEAR(chi.cdf(1.0), 0.1987, 0.0001);
+    EXPECT_NEAR(chi.cdf(2.0), 0.4276, 0.0001);
+
+    // 测试随机采样
+    double sample = chi.sample();
+    EXPECT_GE(sample, 0.0);
 } 

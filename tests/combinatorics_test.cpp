@@ -93,4 +93,46 @@ TEST(CombinatoricsTest, BellTest) {
     EXPECT_EQ(bell(3), 5);
     EXPECT_EQ(bell(4), 15);
     EXPECT_EQ(bell(5), 52);
+}
+
+TEST(CombinatoricsTest, EulerTest) {
+    // 测试基本值
+    EXPECT_EQ(euler(0, 0), 1);
+    EXPECT_EQ(euler(1, 0), 1);
+    EXPECT_EQ(euler(2, 0), 1);
+    EXPECT_EQ(euler(2, 1), 1);
+    EXPECT_EQ(euler(3, 0), 1);
+    EXPECT_EQ(euler(3, 1), 4);
+    EXPECT_EQ(euler(3, 2), 1);
+
+    // 测试边界情况
+    EXPECT_EQ(euler(5, 5), 0);
+    EXPECT_EQ(euler(5, 6), 0);
+}
+
+TEST(CombinatoricsTest, BernoulliTest) {
+    // 测试基本值
+    EXPECT_DOUBLE_EQ(bernoulli(0), 1.0);
+    EXPECT_DOUBLE_EQ(bernoulli(1), -0.5);
+    EXPECT_DOUBLE_EQ(bernoulli(2), 1.0/6.0);
+    EXPECT_DOUBLE_EQ(bernoulli(3), 0.0);
+    EXPECT_DOUBLE_EQ(bernoulli(4), -1.0/30.0);
+    EXPECT_DOUBLE_EQ(bernoulli(5), 0.0);
+    EXPECT_DOUBLE_EQ(bernoulli(6), 1.0/42.0);
+}
+
+TEST(CombinatoricsTest, EulerMascheroniTest) {
+    // 测试欧拉-马歇罗尼常数
+    double gamma = euler_mascheroni();
+    EXPECT_NEAR(gamma, 0.5772156649, 0.0001);
+}
+
+TEST(CombinatoricsTest, HarmonicTest) {
+    // 测试调和数
+    EXPECT_DOUBLE_EQ(harmonic(0), 0.0);
+    EXPECT_DOUBLE_EQ(harmonic(1), 1.0);
+    EXPECT_DOUBLE_EQ(harmonic(2), 1.5);
+    EXPECT_DOUBLE_EQ(harmonic(3), 11.0/6.0);
+    EXPECT_DOUBLE_EQ(harmonic(4), 25.0/12.0);
+    EXPECT_DOUBLE_EQ(harmonic(5), 137.0/60.0);
 } 

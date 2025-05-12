@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <map>
 #include <unordered_map>
+#include <numbers>
 
 namespace mathlib {
 
@@ -90,6 +91,78 @@ namespace statistics {
             return data[n-1];
         }
         return data[i] + fraction * (data[i+1] - data[i]);
+    }
+
+    // 计算协方差
+    template<typename T>
+    double covariance(const std::vector<T>& x, const std::vector<T>& y) {
+        if (x.empty() || y.empty()) {
+            throw std::invalid_argument("数据不能为空");
+        }
+        if (x.size() != y.size()) {
+            throw std::invalid_argument("数据长度必须相同");
+        }
+        double mean_x = mean(x);
+        double mean_y = mean(y);
+        double sum = 0.0;
+        for (size_t i = 0; i < x.size(); ++i) {
+            sum += (x[i] - mean_x) * (y[i] - mean_y);
+        }
+        return sum / x.size();
+    }
+
+    // 计算相关系数
+    template<typename T>
+    double correlation(const std::vector<T>& x, const std::vector<T>& y) {
+        if (x.empty() || y.empty()) {
+            throw std::invalid_argument("数据不能为空");
+        }
+        if (x.size() != y.size()) {
+            throw std::invalid_argument("数据长度必须相同");
+        }
+        double cov = covariance(x, y);
+        double std_x = standard_deviation(x);
+        double std_y = standard_deviation(y);
+        if (std_x == 0.0 || std_y == 0.0) {
+            throw std::runtime_error("标准差不能为零");
+        }
+        return cov / (std_x * std_y);
+    }
+
+    // 计算偏度
+    template<typename T>
+    double skewness(const std::vector<T>& data) {
+        if (data.empty()) {
+            throw std::invalid_argument("数据不能为空");
+        }
+        double m = mean(data);
+        double s = standard_deviation(data);
+        if (s == 0.0) {
+            throw std::runtime_error("标准差不能为零");
+        }
+        double sum = 0.0;
+        for (const auto& x : data) {
+            sum += std::pow((x - m) / s, 3);
+        }
+        return sum / data.size();
+    }
+
+    // 计算峰度
+    template<typename T>
+    double kurtosis(const std::vector<T>& data) {
+        if (data.empty()) {
+            throw std::invalid_argument("数据不能为空");
+        }
+        double m = mean(data);
+        double s = standard_deviation(data);
+        if (s == 0.0) {
+            throw std::runtime_error("标准差不能为零");
+        }
+        double sum = 0.0;
+        for (const auto& x : data) {
+            sum += std::pow((x - m) / s, 4);
+        }
+        return sum / data.size() - 3.0; // 超额峰度
     }
 }
 
@@ -194,6 +267,101 @@ namespace probability {
             return dist(rng_);
         }
     };
+
+    // 指数分布
+    class ExponentialDistribution {
+    private:
+        double lambda_;
+        std::mt19937 rng_;
+
+    public:
+        ExponentialDistribution(double lambda)
+            : lambda_(lambda), rng_(std::random_device{}()) {
+            if (lambda <= 0.0) {
+                throw std::invalid_argument("参数必须为正数");
+            }
+        }
+
+        double pdf(double x) const {
+            if (x < 0.0) return 0.0;
+            return lambda_ * std::exp(-lambda_ * x);
+        }
+
+        double cdf(double x) const {
+            if (x < 0.0) return 0.0;
+            return 1.0 - std::exp(-lambda_ * x);
+        }
+
+        double sample() {
+            std::exponential_distribution<double> dist(lambda_);
+            return dist(rng_);
+        }
+    };
+
+    // 卡方分布
+    class ChiSquaredDistribution {
+    private:
+        int df_;
+        std::mt19937 rng_;
+
+        // 不完全伽马函数
+        double incomplete_gamma(double a, double x) const {
+            if (x <= 0.0) return 0.0;
+            if (x < a + 1.0) {
+                // 使用级数展开
+                double sum = 0.0;
+                double term = 1.0 / a;
+                for (int n = 0; n < 100; ++n) {
+                    sum += term;
+                    term *= x / (a + n + 1);
+                }
+                return std::pow(x, a) * std::exp(-x) * sum;
+            } else {
+                // 使用连分数展开
+                double b = x + 1.0 - a;
+                double c = 1.0 / std::numeric_limits<double>::min();
+                double d = 1.0 / b;
+                double h = d;
+                for (int i = 1; i <= 100; ++i) {
+                    double an = -i * (i - a);
+                    b += 2.0;
+                    d = an * d + b;
+                    if (std::abs(d) < std::numeric_limits<double>::min()) d = std::numeric_limits<double>::min();
+                    c = b + an / c;
+                    if (std::abs(c) < std::numeric_limits<double>::min()) c = std::numeric_limits<double>::min();
+                    d = 1.0 / d;
+                    double del = d * c;
+                    h *= del;
+                    if (std::abs(del - 1.0) < std::numeric_limits<double>::epsilon()) break;
+                }
+                return 1.0 - std::pow(x, a) * std::exp(-x) * h;
+            }
+        }
+
+    public:
+        ChiSquaredDistribution(int degrees_of_freedom)
+            : df_(degrees_of_freedom), rng_(std::random_device{}()) {
+            if (degrees_of_freedom <= 0) {
+                throw std::invalid_argument("自由度必须为正数");
+            }
+        }
+
+        double pdf(double x) const {
+            if (x < 0.0) return 0.0;
+            return std::pow(x, df_/2.0 - 1) * std::exp(-x/2.0) / 
+                   (std::pow(2, df_/2.0) * std::tgamma(df_/2.0));
+        }
+
+        double cdf(double x) const {
+            if (x < 0.0) return 0.0;
+            return incomplete_gamma(df_/2.0, x/2.0) / std::tgamma(df_/2.0);
+        }
+
+        double sample() {
+            std::chi_squared_distribution<double> dist(df_);
+            return dist(rng_);
+        }
+    };
 }
 
 // 组合数学
@@ -276,6 +444,54 @@ namespace combinatorics {
             }
         }
         return bell_numbers[n];
+    }
+
+    // 计算欧拉数 E(n,k)
+    unsigned long long euler(unsigned int n, unsigned int k) {
+        if (k >= n) return 0;
+        if (k == 0) return 1;
+        if (n == 0) return 1;
+        return (k + 1) * euler(n-1, k) + (n - k) * euler(n-1, k-1);
+    }
+
+    // 计算伯努利数 B(n)
+    double bernoulli(unsigned int n) {
+        if (n == 0) return 1.0;
+        if (n == 1) return -0.5;
+        if (n % 2 == 1) return 0.0;
+
+        std::vector<double> b(n + 1);
+        b[0] = 1.0;
+        b[1] = -0.5;
+
+        for (unsigned int m = 2; m <= n; ++m) {
+            b[m] = 0.0;
+            for (unsigned int k = 0; k < m; ++k) {
+                b[m] -= combination(m + 1, k) * b[k];
+            }
+            b[m] /= (m + 1);
+        }
+
+        return b[n];
+    }
+
+    // 计算欧拉-马歇罗尼常数
+    double euler_mascheroni() {
+        const int n = 1000000;
+        double sum = 0.0;
+        for (int i = 1; i <= n; ++i) {
+            sum += 1.0 / i;
+        }
+        return sum - std::log(n);
+    }
+
+    // 计算调和数 H(n)
+    double harmonic(unsigned int n) {
+        double sum = 0.0;
+        for (unsigned int i = 1; i <= n; ++i) {
+            sum += 1.0 / i;
+        }
+        return sum;
     }
 }
 
