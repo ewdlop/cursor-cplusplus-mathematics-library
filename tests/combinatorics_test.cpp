@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "../include/mathlib.hpp"
+#include "../include/mathlib/combinatorics.hpp"
 #include <vector>
 #include <cmath>
 

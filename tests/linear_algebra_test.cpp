@@ -1,4 +1,4 @@
-#include "mathlib/linear_algebra.hpp"
+#include "../include/mathlib/linear_algebra.hpp"
 #include <gtest/gtest.h>
 #include <vector>
 #include <cmath>

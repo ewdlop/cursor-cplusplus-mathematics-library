@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "mathlib.hpp"
+#include "../include/mathlib/probability.hpp"
 #include <cmath>
 
 using namespace mathlib::probability;
