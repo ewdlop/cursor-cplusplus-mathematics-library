@@ -299,4 +299,54 @@ TEST(KruskalWallisTest, EmptyVectorTest) {
     
     EXPECT_THROW(mathlib::statistics::kruskal_wallis_test(samples),
                  std::invalid_argument);
+}
+
+TEST(CorrelationTest, BasicTest) {
+    std::vector<double> x = {1.0, 2.0, 3.0, 4.0, 5.0};
+    std::vector<double> y = {2.0, 4.0, 5.0, 4.0, 5.0};
+    EXPECT_NEAR(mathlib::statistics::correlation(x, y), 0.8, 1e-6);
+}
+
+TEST(CorrelationTest, EmptyVectorTest) {
+    std::vector<double> x = {1.0, 2.0, 3.0};
+    std::vector<double> y;
+    EXPECT_THROW(mathlib::statistics::correlation(x, y), std::invalid_argument);
+}
+
+TEST(SpearmanCorrelationTest, BasicTest) {
+    std::vector<double> x = {1.0, 2.0, 3.0, 4.0, 5.0};
+    std::vector<double> y = {2.0, 4.0, 5.0, 4.0, 5.0};
+    EXPECT_NEAR(mathlib::statistics::spearman_correlation(x, y), 0.8, 1e-6);
+}
+
+TEST(SpearmanCorrelationTest, EmptyVectorTest) {
+    std::vector<double> x = {1.0, 2.0, 3.0};
+    std::vector<double> y;
+    EXPECT_THROW(mathlib::statistics::spearman_correlation(x, y), std::invalid_argument);
+}
+
+TEST(KendallCorrelationTest, BasicTest) {
+    std::vector<double> x = {1.0, 2.0, 3.0, 4.0, 5.0};
+    std::vector<double> y = {2.0, 4.0, 5.0, 4.0, 5.0};
+    EXPECT_NEAR(mathlib::statistics::kendall_correlation(x, y), 0.6, 1e-6);
+}
+
+TEST(KendallCorrelationTest, EmptyVectorTest) {
+    std::vector<double> x = {1.0, 2.0, 3.0};
+    std::vector<double> y;
+    EXPECT_THROW(mathlib::statistics::kendall_correlation(x, y), std::invalid_argument);
+}
+
+TEST(FriedmanTest, BasicTest) {
+    std::vector<std::vector<double>> data = {
+        {1.0, 2.0, 3.0},
+        {2.0, 3.0, 4.0},
+        {3.0, 4.0, 5.0}
+    };
+    EXPECT_NEAR(mathlib::statistics::friedman_test(data), 6.0, 1e-6);
+}
+
+TEST(FriedmanTest, EmptyDataTest) {
+    std::vector<std::vector<double>> data;
+    EXPECT_THROW(mathlib::statistics::friedman_test(data), std::invalid_argument);
 } 

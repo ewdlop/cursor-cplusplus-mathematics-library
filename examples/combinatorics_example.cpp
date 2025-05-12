@@ -52,5 +52,26 @@ int main() {
                   << mathlib::combinatorics::chebyshev_polynomial_second_kind(n, 0.5) << std::endl;
     }
     
+    // 埃尔米特多项式示例
+    std::cout << "\nHermite Polynomials / 埃尔米特多项式:" << std::endl;
+    for (int n = 0; n <= 3; ++n) {
+        std::cout << "H_" << n << "(0.5) = " 
+                  << mathlib::combinatorics::hermite_polynomial(n, 0.5) << std::endl;
+    }
+    
+    // 雅可比多项式示例
+    std::cout << "\nJacobi Polynomials / 雅可比多项式:" << std::endl;
+    for (int n = 0; n <= 3; ++n) {
+        std::cout << "P_" << n << "^(1,1)(0.5) = " 
+                  << mathlib::combinatorics::jacobi_polynomial(n, 1.0, 1.0, 0.5) << std::endl;
+    }
+    
+    // 超几何函数示例
+    std::cout << "\nHypergeometric Function / 超几何函数:" << std::endl;
+    std::cout << "F(1,1,1,0.5) = " 
+              << mathlib::combinatorics::hypergeometric_function(1.0, 1.0, 1.0, 0.5) << std::endl;
+    std::cout << "F(2,1,1,0.5) = " 
+              << mathlib::combinatorics::hypergeometric_function(2.0, 1.0, 1.0, 0.5) << std::endl;
+    
     return 0;
 } 

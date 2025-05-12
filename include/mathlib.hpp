@@ -113,21 +113,116 @@ namespace statistics {
     }
 
     // 计算相关系数
-    template<typename T>
-    double correlation(const std::vector<T>& x, const std::vector<T>& y) {
-        if (x.empty() || y.empty()) {
-            throw std::invalid_argument("数据不能为空");
+    double correlation(const std::vector<double>& x, const std::vector<double>& y) {
+        if (x.size() != y.size() || x.empty()) {
+            throw std::invalid_argument("Invalid input vectors");
         }
-        if (x.size() != y.size()) {
-            throw std::invalid_argument("数据长度必须相同");
+        double sum_x = 0.0, sum_y = 0.0, sum_xy = 0.0;
+        double sum_x2 = 0.0, sum_y2 = 0.0;
+        size_t n = x.size();
+        
+        for (size_t i = 0; i < n; ++i) {
+            sum_x += x[i];
+            sum_y += y[i];
+            sum_xy += x[i] * y[i];
+            sum_x2 += x[i] * x[i];
+            sum_y2 += y[i] * y[i];
         }
-        double cov = covariance(x, y);
-        double std_x = standard_deviation(x);
-        double std_y = standard_deviation(y);
-        if (std_x == 0.0 || std_y == 0.0) {
-            throw std::runtime_error("标准差不能为零");
+        
+        double numerator = n * sum_xy - sum_x * sum_y;
+        double denominator = std::sqrt((n * sum_x2 - sum_x * sum_x) * (n * sum_y2 - sum_y * sum_y));
+        
+        return numerator / denominator;
+    }
+
+    // 计算斯皮尔曼等级相关系数
+    double spearman_correlation(const std::vector<double>& x, const std::vector<double>& y) {
+        if (x.size() != y.size() || x.empty()) {
+            throw std::invalid_argument("Invalid input vectors");
         }
-        return cov / (std_x * std_y);
+        
+        // 计算秩
+        auto rank = [](const std::vector<double>& v) {
+            std::vector<size_t> indices(v.size());
+            std::iota(indices.begin(), indices.end(), 0);
+            std::sort(indices.begin(), indices.end(),
+                     [&v](size_t i1, size_t i2) { return v[i1] < v[i2]; });
+            
+            std::vector<double> ranks(v.size());
+            for (size_t i = 0; i < indices.size(); ++i) {
+                ranks[indices[i]] = i + 1;
+            }
+            return ranks;
+        };
+        
+        std::vector<double> rank_x = rank(x);
+        std::vector<double> rank_y = rank(y);
+        
+        return correlation(rank_x, rank_y);
+    }
+
+    // 计算肯德尔等级相关系数
+    double kendall_correlation(const std::vector<double>& x, const std::vector<double>& y) {
+        if (x.size() != y.size() || x.empty()) {
+            throw std::invalid_argument("Invalid input vectors");
+        }
+        
+        size_t n = x.size();
+        int concordant = 0, discordant = 0;
+        
+        for (size_t i = 0; i < n - 1; ++i) {
+            for (size_t j = i + 1; j < n; ++j) {
+                double dx = x[j] - x[i];
+                double dy = y[j] - y[i];
+                if (dx * dy > 0) {
+                    ++concordant;
+                } else if (dx * dy < 0) {
+                    ++discordant;
+                }
+            }
+        }
+        
+        return static_cast<double>(concordant - discordant) / (n * (n - 1) / 2);
+    }
+
+    // 计算弗里德曼检验
+    double friedman_test(const std::vector<std::vector<double>>& data) {
+        if (data.empty() || data[0].empty()) {
+            throw std::invalid_argument("Invalid input data");
+        }
+        
+        size_t k = data.size();  // 处理数
+        size_t n = data[0].size();  // 区组数
+        
+        // 计算每个区组中的秩
+        std::vector<std::vector<double>> ranks(k, std::vector<double>(n));
+        for (size_t j = 0; j < n; ++j) {
+            std::vector<size_t> indices(k);
+            std::iota(indices.begin(), indices.end(), 0);
+            std::sort(indices.begin(), indices.end(),
+                     [&data, j](size_t i1, size_t i2) { return data[i1][j] < data[i2][j]; });
+            
+            for (size_t i = 0; i < k; ++i) {
+                ranks[indices[i]][j] = i + 1;
+            }
+        }
+        
+        // 计算每个处理的秩和
+        std::vector<double> rank_sums(k, 0.0);
+        for (size_t i = 0; i < k; ++i) {
+            for (size_t j = 0; j < n; ++j) {
+                rank_sums[i] += ranks[i][j];
+            }
+        }
+        
+        // 计算检验统计量
+        double Q = 0.0;
+        for (size_t i = 0; i < k; ++i) {
+            Q += rank_sums[i] * rank_sums[i];
+        }
+        Q = 12.0 / (n * k * (k + 1)) * Q - 3 * n * (k + 1);
+        
+        return Q;
     }
 
     // 计算偏度
@@ -654,6 +749,69 @@ namespace probability {
             return dist(rng_);
         }
     };
+
+    // 威布尔分布
+    class WeibullDistribution {
+    private:
+        double k_;  // 形状参数
+        double lambda_;  // 尺度参数
+        
+    public:
+        WeibullDistribution(double k, double lambda) : k_(k), lambda_(lambda) {
+            if (k <= 0 || lambda <= 0) {
+                throw std::invalid_argument("Invalid parameters");
+            }
+        }
+        
+        double pdf(double x) const {
+            if (x < 0) return 0.0;
+            return (k_ / lambda_) * std::pow(x / lambda_, k_ - 1) * 
+                   std::exp(-std::pow(x / lambda_, k_));
+        }
+        
+        double cdf(double x) const {
+            if (x < 0) return 0.0;
+            return 1.0 - std::exp(-std::pow(x / lambda_, k_));
+        }
+        
+        double sample() const {
+            double u = static_cast<double>(rand()) / RAND_MAX;
+            return lambda_ * std::pow(-std::log(1.0 - u), 1.0 / k_);
+        }
+    };
+    
+    // 对数正态分布
+    class LogNormalDistribution {
+    private:
+        double mu_;  // 位置参数
+        double sigma_;  // 尺度参数
+        
+    public:
+        LogNormalDistribution(double mu, double sigma) : mu_(mu), sigma_(sigma) {
+            if (sigma <= 0) {
+                throw std::invalid_argument("Invalid parameters");
+            }
+        }
+        
+        double pdf(double x) const {
+            if (x <= 0) return 0.0;
+            double z = (std::log(x) - mu_) / sigma_;
+            return 1.0 / (x * sigma_ * std::sqrt(2 * M_PI)) * 
+                   std::exp(-0.5 * z * z);
+        }
+        
+        double cdf(double x) const {
+            if (x <= 0) return 0.0;
+            return 0.5 * (1.0 + std::erf((std::log(x) - mu_) / (sigma_ * std::sqrt(2))));
+        }
+        
+        double sample() const {
+            double u = static_cast<double>(rand()) / RAND_MAX;
+            double v = static_cast<double>(rand()) / RAND_MAX;
+            double z = std::sqrt(-2.0 * std::log(u)) * std::cos(2.0 * M_PI * v);
+            return std::exp(mu_ + sigma_ * z);
+        }
+    };
 }
 
 // 组合数学
@@ -902,6 +1060,74 @@ namespace combinatorics {
         }
         
         return U1;
+    }
+
+    // 埃尔米特多项式
+    double hermite_polynomial(int n, double x) {
+        if (n < 0) {
+            throw std::invalid_argument("Invalid polynomial order");
+        }
+        
+        if (n == 0) return 1.0;
+        if (n == 1) return 2.0 * x;
+        
+        double h0 = 1.0;
+        double h1 = 2.0 * x;
+        double h2;
+        
+        for (int i = 2; i <= n; ++i) {
+            h2 = 2.0 * x * h1 - 2.0 * (i - 1) * h0;
+            h0 = h1;
+            h1 = h2;
+        }
+        
+        return h1;
+    }
+    
+    // 雅可比多项式
+    double jacobi_polynomial(int n, double alpha, double beta, double x) {
+        if (n < 0 || alpha <= -1 || beta <= -1) {
+            throw std::invalid_argument("Invalid parameters");
+        }
+        
+        if (n == 0) return 1.0;
+        if (n == 1) return 0.5 * ((alpha + beta + 2) * x + (alpha - beta));
+        
+        double p0 = 1.0;
+        double p1 = 0.5 * ((alpha + beta + 2) * x + (alpha - beta));
+        double p2;
+        
+        for (int i = 2; i <= n; ++i) {
+            double a1 = 2 * i * (i + alpha + beta) * (2 * i + alpha + beta - 2);
+            double a2 = (2 * i + alpha + beta - 1) * (alpha * alpha - beta * beta);
+            double a3 = (2 * i + alpha + beta - 2) * (2 * i + alpha + beta - 1) * (2 * i + alpha + beta);
+            double a4 = 2 * (i + alpha - 1) * (i + beta - 1) * (2 * i + alpha + beta);
+            
+            p2 = ((a2 + a3 * x) * p1 - a4 * p0) / a1;
+            p0 = p1;
+            p1 = p2;
+        }
+        
+        return p1;
+    }
+    
+    // 超几何函数
+    double hypergeometric_function(double a, double b, double c, double x) {
+        if (std::abs(x) >= 1.0) {
+            throw std::invalid_argument("Invalid argument");
+        }
+        
+        double result = 1.0;
+        double term = 1.0;
+        double n = 1.0;
+        
+        while (std::abs(term) > 1e-10) {
+            term *= (a + n - 1) * (b + n - 1) * x / ((c + n - 1) * n);
+            result += term;
+            n += 1.0;
+        }
+        
+        return result;
     }
 }
 

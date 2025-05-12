@@ -229,4 +229,41 @@ TEST(ChebyshevPolynomialTest, SecondKind) {
 TEST(ChebyshevPolynomialTest, InvalidParameters) {
     EXPECT_THROW(mathlib::combinatorics::chebyshev_polynomial(-1, 0.5, true), std::invalid_argument);
     EXPECT_THROW(mathlib::combinatorics::chebyshev_polynomial(-1, 0.5, false), std::invalid_argument);
+}
+
+TEST(HermitePolynomialTest, BasicCases) {
+    EXPECT_NEAR(mathlib::combinatorics::hermite_polynomial(0, 0.5), 1.0, 1e-6);
+    EXPECT_NEAR(mathlib::combinatorics::hermite_polynomial(1, 0.5), 1.0, 1e-6);
+    EXPECT_NEAR(mathlib::combinatorics::hermite_polynomial(2, 0.5), -1.0, 1e-6);
+    EXPECT_NEAR(mathlib::combinatorics::hermite_polynomial(3, 0.5), -5.0, 1e-6);
+}
+
+TEST(HermitePolynomialTest, InvalidParameters) {
+    EXPECT_THROW(mathlib::combinatorics::hermite_polynomial(-1, 0.5), std::invalid_argument);
+}
+
+TEST(JacobiPolynomialTest, BasicCases) {
+    EXPECT_NEAR(mathlib::combinatorics::jacobi_polynomial(0, 1.0, 1.0, 0.5), 1.0, 1e-6);
+    EXPECT_NEAR(mathlib::combinatorics::jacobi_polynomial(1, 1.0, 1.0, 0.5), 2.0, 1e-6);
+    EXPECT_NEAR(mathlib::combinatorics::jacobi_polynomial(2, 1.0, 1.0, 0.5), 3.5, 1e-6);
+}
+
+TEST(JacobiPolynomialTest, InvalidParameters) {
+    EXPECT_THROW(mathlib::combinatorics::jacobi_polynomial(-1, 1.0, 1.0, 0.5), std::invalid_argument);
+    EXPECT_THROW(mathlib::combinatorics::jacobi_polynomial(1, -1.0, 1.0, 0.5), std::invalid_argument);
+    EXPECT_THROW(mathlib::combinatorics::jacobi_polynomial(1, 1.0, -1.0, 0.5), std::invalid_argument);
+}
+
+TEST(HypergeometricFunctionTest, BasicCases) {
+    EXPECT_NEAR(mathlib::combinatorics::hypergeometric_function(1.0, 1.0, 1.0, 0.5), 
+                2.0, 1e-6);
+    EXPECT_NEAR(mathlib::combinatorics::hypergeometric_function(2.0, 1.0, 1.0, 0.5), 
+                3.0, 1e-6);
+}
+
+TEST(HypergeometricFunctionTest, InvalidParameters) {
+    EXPECT_THROW(mathlib::combinatorics::hypergeometric_function(1.0, 1.0, 1.0, 1.0), 
+                 std::invalid_argument);
+    EXPECT_THROW(mathlib::combinatorics::hypergeometric_function(1.0, 1.0, 1.0, -1.0), 
+                 std::invalid_argument);
 } 

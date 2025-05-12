@@ -253,4 +253,57 @@ TEST(GammaDistributionTest, Sampling) {
     double sample = dist.sample();
     EXPECT_GE(sample, 0.0);
     EXPECT_TRUE(std::isfinite(sample));
+}
+
+TEST(WeibullDistributionTest, InvalidParameters) {
+    EXPECT_THROW(mathlib::probability::WeibullDistribution(0, 1.0), std::invalid_argument);
+    EXPECT_THROW(mathlib::probability::WeibullDistribution(1.0, 0), std::invalid_argument);
+    EXPECT_THROW(mathlib::probability::WeibullDistribution(-1.0, 1.0), std::invalid_argument);
+}
+
+TEST(WeibullDistributionTest, PDF) {
+    mathlib::probability::WeibullDistribution weibull(2.0, 1.0);
+    EXPECT_EQ(weibull.pdf(-1.0), 0.0);
+    EXPECT_GT(weibull.pdf(0.5), 0.0);
+    EXPECT_NEAR(weibull.pdf(1.0), 0.735759, 1e-6);
+}
+
+TEST(WeibullDistributionTest, CDF) {
+    mathlib::probability::WeibullDistribution weibull(2.0, 1.0);
+    EXPECT_EQ(weibull.cdf(-1.0), 0.0);
+    EXPECT_NEAR(weibull.cdf(1.0), 0.632121, 1e-6);
+}
+
+TEST(WeibullDistributionTest, Sampling) {
+    mathlib::probability::WeibullDistribution weibull(2.0, 1.0);
+    double sample = weibull.sample();
+    EXPECT_GE(sample, 0.0);
+    EXPECT_TRUE(std::isfinite(sample));
+}
+
+TEST(LogNormalDistributionTest, InvalidParameters) {
+    EXPECT_THROW(mathlib::probability::LogNormalDistribution(0.0, 0), std::invalid_argument);
+    EXPECT_THROW(mathlib::probability::LogNormalDistribution(0.0, -1.0), std::invalid_argument);
+}
+
+TEST(LogNormalDistributionTest, PDF) {
+    mathlib::probability::LogNormalDistribution lognormal(0.0, 1.0);
+    EXPECT_EQ(lognormal.pdf(-1.0), 0.0);
+    EXPECT_EQ(lognormal.pdf(0.0), 0.0);
+    EXPECT_GT(lognormal.pdf(1.0), 0.0);
+    EXPECT_NEAR(lognormal.pdf(1.0), 0.398942, 1e-6);
+}
+
+TEST(LogNormalDistributionTest, CDF) {
+    mathlib::probability::LogNormalDistribution lognormal(0.0, 1.0);
+    EXPECT_EQ(lognormal.cdf(-1.0), 0.0);
+    EXPECT_EQ(lognormal.cdf(0.0), 0.0);
+    EXPECT_NEAR(lognormal.cdf(1.0), 0.5, 1e-6);
+}
+
+TEST(LogNormalDistributionTest, Sampling) {
+    mathlib::probability::LogNormalDistribution lognormal(0.0, 1.0);
+    double sample = lognormal.sample();
+    EXPECT_GT(sample, 0.0);
+    EXPECT_TRUE(std::isfinite(sample));
 } 
