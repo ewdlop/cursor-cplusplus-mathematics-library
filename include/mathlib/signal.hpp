@@ -204,5 +204,165 @@ std::vector<T> autocorrelation(const std::vector<T>& input) {
     return result;
 }
 
+// 小波变换
+std::vector<std::vector<double>> wavelet_transform(
+    const std::vector<double>& signal,
+    const std::vector<double>& wavelet,
+    int levels
+) {
+    if (signal.empty() || wavelet.empty()) {
+        throw std::invalid_argument("输入信号或小波函数不能为空");
+    }
+
+    int signal_length = signal.size();
+    int wavelet_length = wavelet.size();
+    std::vector<std::vector<double>> result(levels);
+
+    // 对每一层进行小波变换
+    std::vector<double> current_signal = signal;
+    for (int level = 0; level < levels; ++level) {
+        int current_length = current_signal.size();
+        if (current_length < wavelet_length) break;
+
+        // 计算当前层的系数
+        std::vector<double> coefficients(current_length / 2);
+        for (int i = 0; i < current_length / 2; ++i) {
+            double sum = 0.0;
+            for (int j = 0; j < wavelet_length; ++j) {
+                if (2 * i + j < current_length) {
+                    sum += current_signal[2 * i + j] * wavelet[j];
+                }
+            }
+            coefficients[i] = sum;
+        }
+
+        result[level] = coefficients;
+        current_signal = coefficients;
+    }
+
+    return result;
+}
+
+// 希尔伯特变换
+std::vector<std::complex<double>> hilbert_transform(const std::vector<double>& signal) {
+    if (signal.empty()) {
+        throw std::invalid_argument("输入信号不能为空");
+    }
+
+    // 计算FFT
+    auto fft_result = fft(signal);
+    int n = fft_result.size();
+
+    // 应用希尔伯特变换
+    for (int i = 0; i < n; ++i) {
+        if (i == 0 || i == n/2) {
+            fft_result[i] *= 0;
+        } else if (i < n/2) {
+            fft_result[i] *= 2;
+        } else {
+            fft_result[i] *= 0;
+        }
+    }
+
+    // 计算IFFT
+    return ifft(fft_result);
+}
+
+// 短时傅里叶变换
+std::vector<std::vector<std::complex<double>>> short_time_fourier_transform(
+    const std::vector<double>& signal,
+    int window_size,
+    int hop_size
+) {
+    if (signal.empty()) {
+        throw std::invalid_argument("输入信号不能为空");
+    }
+
+    // 创建汉宁窗
+    std::vector<double> window(window_size);
+    for (int i = 0; i < window_size; ++i) {
+        window[i] = 0.5 * (1 - std::cos(2 * M_PI * i / (window_size - 1)));
+    }
+
+    // 计算STFT
+    std::vector<std::vector<std::complex<double>>> stft;
+    for (int i = 0; i + window_size <= signal.size(); i += hop_size) {
+        std::vector<double> windowed_signal(window_size);
+        for (int j = 0; j < window_size; ++j) {
+            windowed_signal[j] = signal[i + j] * window[j];
+        }
+        stft.push_back(fft(windowed_signal));
+    }
+
+    return stft;
+}
+
+// 倒谱分析
+std::vector<double> cepstrum(const std::vector<double>& signal) {
+    if (signal.empty()) {
+        throw std::invalid_argument("输入信号不能为空");
+    }
+
+    // 计算功率谱
+    auto psd = power_spectral_density(signal);
+    
+    // 计算对数功率谱
+    std::vector<double> log_psd(psd.size());
+    for (size_t i = 0; i < psd.size(); ++i) {
+        log_psd[i] = std::log(psd[i] + 1e-10);  // 添加小量避免取对数0
+    }
+
+    // 计算倒谱
+    auto cepstrum_result = fft(log_psd);
+    std::vector<double> result(cepstrum_result.size());
+    for (size_t i = 0; i < cepstrum_result.size(); ++i) {
+        result[i] = std::abs(cepstrum_result[i]);
+    }
+
+    return result;
+}
+
+// 自适应滤波器
+class AdaptiveFilter {
+public:
+    AdaptiveFilter(int filter_length, double mu = 0.01)
+        : filter_length_(filter_length), mu_(mu) {
+        weights_.resize(filter_length, 0.0);
+    }
+
+    std::vector<double> filter(const std::vector<double>& input, const std::vector<double>& desired) {
+        if (input.size() != desired.size()) {
+            throw std::invalid_argument("输入信号和期望信号长度不匹配");
+        }
+
+        std::vector<double> output(input.size());
+        std::vector<double> error(input.size());
+
+        for (size_t i = filter_length_; i < input.size(); ++i) {
+            // 计算输出
+            double y = 0.0;
+            for (int j = 0; j < filter_length_; ++j) {
+                y += weights_[j] * input[i - j];
+            }
+            output[i] = y;
+
+            // 计算误差
+            error[i] = desired[i] - y;
+
+            // 更新权重
+            for (int j = 0; j < filter_length_; ++j) {
+                weights_[j] += mu_ * error[i] * input[i - j];
+            }
+        }
+
+        return output;
+    }
+
+private:
+    int filter_length_;
+    double mu_;
+    std::vector<double> weights_;
+};
+
 } // namespace signal
 } // namespace mathlib 

@@ -223,5 +223,190 @@ std::vector<T> simplex_method(
     return solution;
 }
 
+// 粒子群优化算法
+template<typename Func>
+std::vector<double> particle_swarm_optimization(
+    Func objective,
+    const std::vector<double>& lower_bounds,
+    const std::vector<double>& upper_bounds,
+    int num_particles = 30,
+    int max_iterations = 100,
+    double w = 0.7,  // 惯性权重
+    double c1 = 1.5, // 个体学习因子
+    double c2 = 1.5  // 社会学习因子
+) {
+    if (lower_bounds.size() != upper_bounds.size()) {
+        throw std::invalid_argument("边界维度不匹配");
+    }
+
+    int dim = lower_bounds.size();
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_real_distribution<double> dist(0.0, 1.0);
+
+    // 初始化粒子
+    struct Particle {
+        std::vector<double> position;
+        std::vector<double> velocity;
+        std::vector<double> best_position;
+        double best_value;
+    };
+
+    std::vector<Particle> particles(num_particles);
+    std::vector<double> global_best_position(dim);
+    double global_best_value = std::numeric_limits<double>::infinity();
+
+    // 初始化粒子
+    for (auto& p : particles) {
+        p.position.resize(dim);
+        p.velocity.resize(dim);
+        p.best_position.resize(dim);
+        
+        for (int i = 0; i < dim; ++i) {
+            p.position[i] = lower_bounds[i] + dist(gen) * (upper_bounds[i] - lower_bounds[i]);
+            p.velocity[i] = 0.0;
+            p.best_position[i] = p.position[i];
+        }
+        
+        p.best_value = objective(p.position);
+        if (p.best_value < global_best_value) {
+            global_best_value = p.best_value;
+            global_best_position = p.best_position;
+        }
+    }
+
+    // 主循环
+    for (int iter = 0; iter < max_iterations; ++iter) {
+        for (auto& p : particles) {
+            // 更新速度
+            for (int i = 0; i < dim; ++i) {
+                double r1 = dist(gen);
+                double r2 = dist(gen);
+                p.velocity[i] = w * p.velocity[i] +
+                               c1 * r1 * (p.best_position[i] - p.position[i]) +
+                               c2 * r2 * (global_best_position[i] - p.position[i]);
+            }
+
+            // 更新位置
+            for (int i = 0; i < dim; ++i) {
+                p.position[i] += p.velocity[i];
+                p.position[i] = std::max(lower_bounds[i], std::min(upper_bounds[i], p.position[i]));
+            }
+
+            // 更新最优解
+            double current_value = objective(p.position);
+            if (current_value < p.best_value) {
+                p.best_value = current_value;
+                p.best_position = p.position;
+                if (current_value < global_best_value) {
+                    global_best_value = current_value;
+                    global_best_position = p.position;
+                }
+            }
+        }
+    }
+
+    return global_best_position;
+}
+
+// 遗传算法
+template<typename Func>
+std::vector<double> genetic_algorithm(
+    Func objective,
+    const std::vector<double>& lower_bounds,
+    const std::vector<double>& upper_bounds,
+    int population_size = 100,
+    int max_generations = 100,
+    double mutation_rate = 0.1
+) {
+    if (lower_bounds.size() != upper_bounds.size()) {
+        throw std::invalid_argument("边界维度不匹配");
+    }
+
+    int dim = lower_bounds.size();
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_real_distribution<double> dist(0.0, 1.0);
+
+    // 初始化种群
+    struct Individual {
+        std::vector<double> genes;
+        double fitness;
+    };
+
+    std::vector<Individual> population(population_size);
+    std::vector<Individual> new_population(population_size);
+
+    // 初始化种群
+    for (auto& ind : population) {
+        ind.genes.resize(dim);
+        for (int i = 0; i < dim; ++i) {
+            ind.genes[i] = lower_bounds[i] + dist(gen) * (upper_bounds[i] - lower_bounds[i]);
+        }
+        ind.fitness = objective(ind.genes);
+    }
+
+    // 主循环
+    for (int gen = 0; gen < max_generations; ++gen) {
+        // 选择
+        std::sort(population.begin(), population.end(),
+                 [](const Individual& a, const Individual& b) {
+                     return a.fitness < b.fitness;
+                 });
+
+        // 精英保留
+        for (int i = 0; i < population_size / 10; ++i) {
+            new_population[i] = population[i];
+        }
+
+        // 交叉和变异
+        for (int i = population_size / 10; i < population_size; i += 2) {
+            // 选择父代
+            int parent1 = std::floor(dist(gen) * population_size);
+            int parent2 = std::floor(dist(gen) * population_size);
+
+            // 交叉
+            for (int j = 0; j < dim; ++j) {
+                if (dist(gen) < 0.5) {
+                    new_population[i].genes[j] = population[parent1].genes[j];
+                    if (i + 1 < population_size) {
+                        new_population[i + 1].genes[j] = population[parent2].genes[j];
+                    }
+                } else {
+                    new_population[i].genes[j] = population[parent2].genes[j];
+                    if (i + 1 < population_size) {
+                        new_population[i + 1].genes[j] = population[parent1].genes[j];
+                    }
+                }
+            }
+
+            // 变异
+            for (int j = 0; j < dim; ++j) {
+                if (dist(gen) < mutation_rate) {
+                    new_population[i].genes[j] = lower_bounds[j] + dist(gen) * (upper_bounds[j] - lower_bounds[j]);
+                }
+                if (i + 1 < population_size && dist(gen) < mutation_rate) {
+                    new_population[i + 1].genes[j] = lower_bounds[j] + dist(gen) * (upper_bounds[j] - lower_bounds[j]);
+                }
+            }
+
+            // 计算适应度
+            new_population[i].fitness = objective(new_population[i].genes);
+            if (i + 1 < population_size) {
+                new_population[i + 1].fitness = objective(new_population[i + 1].genes);
+            }
+        }
+
+        population = new_population;
+    }
+
+    // 返回最优解
+    auto best = std::min_element(population.begin(), population.end(),
+                               [](const Individual& a, const Individual& b) {
+                                   return a.fitness < b.fitness;
+                               });
+    return best->genes;
+}
+
 } // namespace optimization
 } // namespace mathlib 
