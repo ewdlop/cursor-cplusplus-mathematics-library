@@ -1,265 +1,196 @@
-# C++ 数学库 / C++ Mathematics Library
+# C++ Mathematics Library / C++数学库
 
-## 简介 | Introduction
+A powerful C++ mathematics library providing rich mathematical computing capabilities.
+这是一个功能强大的C++数学库，提供了丰富的数学计算功能。
 
-本库为 C++ 提供了丰富的数学功能，包括统计、概率、组合数学、线性代数、数值分析、优化算法和信号处理。现已将原有的 `mathlib.hpp` 拆分为多个子模块，便于按需引用和维护。
-
-This library provides rich mathematical functionalities for C++, including statistics, probability, combinatorics, linear algebra, numerical analysis, optimization algorithms, and signal processing. The original `mathlib.hpp` has been split into several submodules for easier and more flexible usage.
-
----
-
-## 目录结构 | Directory Structure
+## Directory Structure / 目录结构
 
 ```
 include/
-  mathlib/
-    statistics.hpp      # 统计相关
-    probability.hpp     # 概率相关
-    combinatorics.hpp   # 组合数学相关
-    linear_algebra.hpp  # 线性代数相关
-    numerical.hpp      # 数值分析相关
-    optimization.hpp   # 优化算法相关
-    signal.hpp         # 信号处理相关
+  ├── mathlib/
+  │   ├── statistics.hpp    # Statistical functions / 统计函数
+  │   ├── probability.hpp   # Probability functions / 概率函数
+  │   ├── combinatorics.hpp # Combinatorics / 组合数学
+  │   ├── numerical.hpp     # Numerical analysis / 数值分析
+  │   ├── optimization.hpp  # Optimization algorithms / 优化算法
+  │   └── signal.hpp        # Signal processing / 信号处理
+  └── mathlib.hpp          # Main header file / 主头文件
+tests/                     # Test files / 测试文件
+examples/                  # Example code / 示例代码
 ```
 
----
+## Usage / 使用方法
 
-## 如何使用 | How to Use
-
-**请注意：自 v2.0 起，`mathlib.hpp` 已被移除。请直接包含所需的子模块头文件。**
-
-**Note:** Since v2.0, `mathlib.hpp` has been removed. Please include the required submodule headers directly.
-
-### 示例 | Example
+Include the required submodule headers directly:
+直接包含需要的子模块头文件：
 
 ```cpp
-#include "mathlib/statistics.hpp"
-#include "mathlib/probability.hpp"
-#include "mathlib/combinatorics.hpp"
-#include "mathlib/linear_algebra.hpp"
-#include "mathlib/numerical.hpp"
-#include "mathlib/optimization.hpp"
-#include "mathlib/signal.hpp"
-
-#include <vector>
-#include <iostream>
-
-int main() {
-    // 统计示例
-    std::vector<double> data = {1.0, 2.0, 3.0, 4.0, 5.0};
-    std::cout << "Mean: " << mathlib::statistics::mean(data) << std::endl;
-    
-    // 数值分析示例
-    auto f = [](double x) { return x * x - 2; };
-    double root = mathlib::numerical::newton_method(f, 1.0);
-    std::cout << "Square root of 2: " << root << std::endl;
-    
-    // 优化示例
-    auto objective = [](const std::vector<double>& x) { 
-        return x[0] * x[0] + x[1] * x[1]; 
-    };
-    auto result = mathlib::optimization::gradient_descent(objective, {1.0, 1.0});
-    
-    // 信号处理示例
-    std::vector<double> signal = {1.0, 2.0, 3.0, 4.0, 5.0};
-    auto fft_result = mathlib::signal::fft(signal);
-    
-    return 0;
-}
+#include "mathlib/statistics.hpp"    // Statistical functions / 统计函数
+#include "mathlib/probability.hpp"   // Probability functions / 概率函数
+#include "mathlib/combinatorics.hpp" // Combinatorics / 组合数学
+#include "mathlib/numerical.hpp"     // Numerical analysis / 数值分析
+#include "mathlib/optimization.hpp"  // Optimization algorithms / 优化算法
+#include "mathlib/signal.hpp"        // Signal processing / 信号处理
 ```
 
----
+## Main Features / 主要功能
 
-## 主要功能 | Main Features
+### 1. Statistical Functions / 统计函数 (statistics.hpp)
+- Descriptive Statistics: mean, variance, standard deviation, median, etc.
+  描述性统计：均值、方差、标准差、中位数等
+- Hypothesis Testing: t-test, chi-square test, etc.
+  假设检验：t检验、卡方检验等
+- Confidence Interval Calculation
+  置信区间计算
+- Correlation Analysis
+  相关性分析
 
-### 统计 (Statistics)
-- 基础统计：均值、方差、标准差、中位数、众数等
-- 高级统计：偏度、峰度、相关性、协方差、分位数等
-- 假设检验：t检验、F检验、卡方检验等
-- 非参数检验：Wilcoxon检验、Kruskal-Wallis检验等
-- 时间序列分析：自相关、移动平均、指数平滑等
+### 2. Probability Functions / 概率函数 (probability.hpp)
+- Probability Distributions: normal, binomial, Poisson, etc.
+  概率分布：正态分布、二项分布、泊松分布等
+- Random Number Generators
+  随机数生成器
+- Probability Theory Tools: entropy, mutual information, etc.
+  概率论工具：熵、互信息等
+- Markov Chains
+  马尔可夫链
 
-### 概率 (Probability)
-- 概率分布：正态、二项、泊松、指数、伽马等
-- 随机数生成：各种分布的随机数生成器
-- 概率论工具：熵、互信息、KL散度等
-- 马尔可夫链：转移矩阵、稳态分布等
-- 贝叶斯统计：贝叶斯推断、后验概率等
+### 3. Combinatorics / 组合数学 (combinatorics.hpp)
+- Basic Combinatorial Functions: factorial, combinations, permutations
+  基本组合函数：阶乘、组合数、排列数
+- Polynomials: Laguerre polynomials, Chebyshev polynomials
+  多项式：拉盖尔多项式、切比雪夫多项式
+- Generating Functions: combination generation, permutation generation
+  生成函数：组合生成、排列生成
+- Combinatorial Optimization: binomial coefficients, polynomial coefficients
+  组合优化：二项式系数、多项式系数
+- Combinatorial Identities: Stirling numbers, Bell numbers
+  组合恒等式：斯特林数、贝尔数
 
-### 组合数学 (Combinatorics)
-- 基础组合：阶乘、组合数、排列数等
-- 特殊函数：斯特林数、贝尔数、欧拉数等
-- 多项式：拉盖尔多项式、切比雪夫多项式等
-- 生成函数：组合生成函数、指数生成函数等
-- 图论：路径计数、树计数、匹配等
+### 4. Numerical Analysis / 数值分析 (numerical.hpp)
+- Numerical Integration / 数值积分:
+  - Trapezoidal Rule / 梯形法则
+  - Simpson's Rule / 辛普森法则
+  - Gaussian Quadrature / 高斯求积
+  - Gauss-Legendre Quadrature / 高斯-勒让德求积
+  - Adaptive Quadrature / 自适应积分
+  - Multiple Integration / 多重积分
+- Numerical Differentiation / 数值微分:
+  - Central Difference / 中心差分
+  - Forward Difference / 前向差分
+- Equation Solving / 方程求解:
+  - Newton's Method / 牛顿法
+  - Bisection Method / 二分法
+- Interpolation Methods / 插值方法:
+  - Lagrange Interpolation / 拉格朗日插值
+- Ordinary Differential Equations / 常微分方程:
+  - Euler Method / 欧拉法
+  - Runge-Kutta Method / 龙格-库塔法
 
-### 线性代数 (Linear Algebra)
-- 矩阵运算：基本运算、转置、逆、行列式等
-- 向量运算：点积、叉积、范数等
-- 分解方法：LU、QR、SVD、Cholesky等
-- 特征值问题：特征值、特征向量计算
-- 线性系统：方程组求解、最小二乘等
+### 5. Optimization Algorithms / 优化算法 (optimization.hpp)
+- Unconstrained Optimization / 无约束优化:
+  - Gradient Descent / 梯度下降
+  - Conjugate Gradient Method / 共轭梯度法
+- Global Optimization / 全局优化:
+  - Simulated Annealing / 模拟退火
+  - Particle Swarm Optimization / 粒子群优化
+  - Genetic Algorithm / 遗传算法
+- Linear Programming / 线性规划:
+  - Simplex Method / 单纯形法
 
-### 数值分析 (Numerical Analysis)
-- 数值积分：梯形法则、辛普森法则、高斯求积等
-- 数值微分：中心差分、前向差分等
-- 方程求解：牛顿法、二分法、割线法等
-- 插值方法：拉格朗日插值、牛顿插值、样条插值等
-- 常微分方程：欧拉法、龙格库塔法等
+### 6. Signal Processing / 信号处理 (signal.hpp)
+- Fourier Transform / 傅里叶变换:
+  - FFT (Fast Fourier Transform) / 快速傅里叶变换
+  - IFFT (Inverse Fast Fourier Transform) / 逆快速傅里叶变换
+  - Short-Time Fourier Transform / 短时傅里叶变换
+- Filters / 滤波器:
+  - FIR Filter / FIR滤波器
+  - IIR Filter / IIR滤波器
+  - Adaptive Filter / 自适应滤波器
+- Spectral Analysis / 频谱分析:
+  - Power Spectral Density / 功率谱密度
+  - Cepstrum Analysis / 倒谱分析
+- Signal Analysis / 信号分析:
+  - Convolution / 卷积
+  - Autocorrelation / 自相关
+  - Wavelet Transform / 小波变换
+  - Hilbert Transform / 希尔伯特变换
 
-### 优化算法 (Optimization)
-- 无约束优化：梯度下降、共轭梯度、拟牛顿法等
-- 约束优化：拉格朗日乘子法、内点法等
-- 全局优化：模拟退火、遗传算法等
-- 线性规划：单纯形法、内点法等
-- 非线性规划：序列二次规划等
+## Example Code / 示例代码
 
-### 信号处理 (Signal Processing)
-- 傅里叶变换：FFT、DFT、小波变换等
-- 滤波器：FIR、IIR、卡尔曼滤波等
-- 频谱分析：功率谱、相位谱等
-- 信号重构：采样定理、插值等
-- 数字信号处理：卷积、相关等
+### Numerical Analysis Example / 数值分析示例
+```cpp
+#include "mathlib/numerical.hpp"
 
----
+// Using Gauss-Legendre quadrature for integration
+// 使用高斯-勒让德求积法计算积分
+auto f = [](double x) { return x * x; };
+double result = mathlib::numerical::gauss_legendre_quadrature(f, 0.0, 1.0, 4);
 
-## 兼容性与迁移 | Compatibility & Migration
+// Using adaptive quadrature
+// 使用自适应积分法
+double result2 = mathlib::numerical::adaptive_quadrature(f, 0.0, 1.0);
 
-- **如您的代码原本包含 `#include "mathlib.hpp"`，请替换为需要的子模块头文件。**
-- **If your code previously included `#include "mathlib.hpp"`, please replace it with the required submodule headers.**
+// Computing double integral
+// 计算二重积分
+auto f2 = [](double x, double y) { return x * x + y * y; };
+double result3 = mathlib::numerical::double_integral(f2, 0.0, 1.0, 0.0, 1.0);
+```
 
----
+### Optimization Example / 优化算法示例
+```cpp
+#include "mathlib/optimization.hpp"
 
-## 构建与测试 | Build & Test
+// Using Particle Swarm Optimization
+// 使用粒子群优化
+auto objective = [](const std::vector<double>& x) {
+    return x[0] * x[0] + x[1] * x[1];
+};
+std::vector<double> lower_bounds = {-10.0, -10.0};
+std::vector<double> upper_bounds = {10.0, 10.0};
+auto result = mathlib::optimization::particle_swarm_optimization(
+    objective, lower_bounds, upper_bounds);
 
-请确保您的 include 路径包含 `include/` 目录，并根据需要链接 Google Test 等测试框架。
+// Using Genetic Algorithm
+// 使用遗传算法
+auto result2 = mathlib::optimization::genetic_algorithm(
+    objective, lower_bounds, upper_bounds);
+```
 
-Make sure your include path contains the `include/` directory, and link with Google Test or other frameworks as needed.
+### Signal Processing Example / 信号处理示例
+```cpp
+#include "mathlib/signal.hpp"
 
----
+// Wavelet Transform
+// 小波变换
+std::vector<double> signal = {1.0, 2.0, 3.0, 4.0};
+std::vector<double> wavelet = {0.5, 0.5};
+auto result = mathlib::signal::wavelet_transform(signal, wavelet, 2);
 
-## 反馈与贡献 | Feedback & Contribution
+// Short-Time Fourier Transform
+// 短时傅里叶变换
+auto stft = mathlib::signal::short_time_fourier_transform(signal, 4, 2);
 
-欢迎提交 issue 或 pull request，帮助本库完善！
+// Using Adaptive Filter
+// 使用自适应滤波器
+mathlib::signal::AdaptiveFilter filter(4);
+std::vector<double> desired = {1.0, 1.5, 2.0, 2.5};
+auto filtered = filter.filter(signal, desired);
+```
 
-Feel free to submit issues or pull requests to help improve this library!
+## Building and Testing / 编译和测试
 
-## Features / 功能特点
+Build the project using CMake:
+使用CMake构建项目：
 
-### Statistical Functions / 统计函数
-- Basic Statistics / 基础统计
-  - Mean, Variance, Standard Deviation / 均值、方差、标准差
-  - Median, Mode, Quantiles / 中位数、众数、分位数
-  - Covariance and Correlation / 协方差和相关系数
-- Advanced Statistics / 高级统计
-  - Skewness and Kurtosis / 偏度和峰度
-  - Hypothesis Testing (t-test, F-test) / 假设检验（t检验、F检验）
-  - Confidence Intervals / 置信区间
-- Non-parametric Tests / 非参数检验
-  - Wilcoxon Rank-Sum Test / Wilcoxon秩和检验
-  - Kruskal-Wallis Test / Kruskal-Wallis检验
-  - Friedman Test / 弗里德曼检验
-- Correlation Analysis / 相关性分析
-  - Pearson Correlation / 皮尔逊相关系数
-  - Spearman Rank Correlation / 斯皮尔曼等级相关系数
-  - Kendall Rank Correlation / 肯德尔等级相关系数
-
-### Linear Algebra / 线性代数
-- Matrix Operations / 矩阵运算
-  - Basic Operations (Addition, Subtraction, Multiplication) / 基础运算（加法、减法、乘法）
-  - Matrix Transpose and Inverse / 矩阵转置和逆
-  - Determinant and Trace / 行列式和迹
-  - Eigenvalues and Eigenvectors / 特征值和特征向量
-- Vector Operations / 向量运算
-  - Dot Product and Cross Product / 点积和叉积
-  - Vector Norms / 向量范数
-  - Vector Projection / 向量投影
-- Decomposition Methods / 分解方法
-  - LU Decomposition / LU分解
-  - QR Decomposition / QR分解
-  - Singular Value Decomposition (SVD) / 奇异值分解
-  - Cholesky Decomposition / 乔列斯基分解
-- Linear Systems / 线性系统
-  - Solving Linear Equations / 求解线性方程组
-  - Least Squares Solutions / 最小二乘解
-  - Matrix Condition Number / 矩阵条件数
-
-### Probability Distributions / 概率分布
-- Continuous Distributions / 连续分布
-  - Normal Distribution / 正态分布
-  - Exponential Distribution / 指数分布
-  - Chi-Squared Distribution / 卡方分布
-  - t-Distribution / t分布
-  - F-Distribution / F分布
-  - Beta Distribution / Beta分布
-  - Gamma Distribution / Gamma分布
-  - Weibull Distribution / 威布尔分布
-  - Log-Normal Distribution / 对数正态分布
-- Discrete Distributions / 离散分布
-  - Binomial Distribution / 二项分布
-  - Poisson Distribution / 泊松分布
-
-### Combinatorial Mathematics / 组合数学
-- Basic Combinatorics / 基础组合
-  - Factorial, Permutations, Combinations / 阶乘、排列、组合
-  - Stirling Numbers / 斯特林数
-  - Catalan Numbers / 卡特兰数
-  - Bell Numbers / 贝尔数
-- Special Functions / 特殊函数
-  - Euler and Bernoulli Numbers / 欧拉数和伯努利数
-  - Harmonic Numbers / 调和数
-  - Polylogarithm / 多对数函数
-- Orthogonal Polynomials / 正交多项式
-  - Euler Polynomials / 欧拉多项式
-  - Bernoulli Polynomials / 伯努利多项式
-  - Laguerre Polynomials / 拉盖尔多项式
-  - Chebyshev Polynomials / 切比雪夫多项式
-  - Hermite Polynomials / 埃尔米特多项式
-  - Jacobi Polynomials / 雅可比多项式
-  - Hypergeometric Function / 超几何函数
-
-## Requirements / 要求
-- C++23 compatible compiler / C++23兼容的编译器
-- CMake 3.10 or higher / CMake 3.10或更高版本
-
-## Building / 构建
 ```bash
 mkdir build
 cd build
 cmake ..
 make
-```
-
-## Testing / 测试
-```bash
-cd build
 make test
 ```
 
-The test suite includes comprehensive tests for:
-- Matrix operations and error handling
-- Vector operations
-- Linear system solving
-- Edge cases and invalid inputs
-
-测试套件包括：
-- 矩阵运算和错误处理
-- 向量运算
-- 线性方程组求解
-- 边界情况和无效输入
-
-## Examples / 示例
-The library includes example programs demonstrating various features:
-- `statistics_example.cpp`: Statistical functions and tests
-- `probability_example.cpp`: Probability distributions
-- `combinatorics_example.cpp`: Combinatorial functions and polynomials
-- `linear_algebra_example.cpp`: Matrix and vector operations
-
-库包含演示各种功能的示例程序：
-- `statistics_example.cpp`：统计函数和检验
-- `probability_example.cpp`：概率分布
-- `combinatorics_example.cpp`：组合函数和多项式
-- `linear_algebra_example.cpp`：矩阵和向量运算
-
 ## License / 许可证
-MIT License / MIT许可证 
+
+MIT License 
