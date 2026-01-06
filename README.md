@@ -1,7 +1,7 @@
 # C++ Mathematics Library / C++数学库
 
-A powerful C++ mathematics library providing rich mathematical computing capabilities.
-这是一个功能强大的C++数学库，提供了丰富的数学计算功能。
+A C++ mathematics library providing rich mathematical computing capabilities.
+这是一个功的C++数学库，提供了丰富的数学计算功能。
 
 ## Directory Structure / 目录结构
 
